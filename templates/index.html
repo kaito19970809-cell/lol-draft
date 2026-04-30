@@ -16,6 +16,9 @@
 
 <h1>LoL Draft Tool</h1>
 
+<h2>ピック履歴</h2>
+<ul id="picked"></ul>
+
 <div id="champions">
     {% for champ in champions %}
         <div class="champ" onclick="pick(this)">
@@ -26,7 +29,15 @@
 
 <script>
 function pick(element) {
-    element.remove(); // ← クリックしたら消える（重複防止）
+    const champ = element.innerText;
+
+    // 履歴に追加
+    const li = document.createElement("li");
+    li.textContent = champ;
+    document.getElementById("picked").appendChild(li);
+
+    // 消す
+    element.remove();
 }
 </script>
 
