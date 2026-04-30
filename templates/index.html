@@ -19,11 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function pick(element) {
-    const champ = element.querySelector("img").alt;
-    const player = getCurrentPlayer();
+    const champ = element.innerText;
 
     const li = document.createElement("li");
-    li.textContent = player + " → " + champ;
+    li.textContent = getCurrentPlayer() + " → " + champ;
+
     document.getElementById("picked").appendChild(li);
 
     element.remove();
