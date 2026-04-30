@@ -1,3 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LoL Draft</title>
+</head>
+<body>
+
+<h1>LoL Draft Tool</h1>
+
+<h2>現在のターン: <span id="currentPlayer"></span></h2>
+
+<h2>ピック履歴</h2>
+<ul id="picked"></ul>
+
+<div id="champions">
+    {% for champ in champions %}
+        <div onclick="pick(this)" style="display:inline-block; margin:5px; padding:10px; background:lightgray; cursor:pointer;">
+            {{ champ }}
+        </div>
+    {% endfor %}
+</div>
+
 <script>
 const basePlayers = [
     "Player1","Player2","Player3","Player4","Player5",
@@ -37,3 +59,6 @@ function pick(element) {
     }
 }
 </script>
+
+</body>
+</html>
