@@ -55,13 +55,24 @@
 </div>
 
 <script>
-const order = [0,1,1,0,0,1,1,0,0,1];
+const players = [
+    "Player1","Player2","Player3","Player4","Player5",
+    "Player6","Player7","Player8","Player9","Player10"
+];
+
+const order = [
+    0,1,2,3,4,5,6,7,8,9,
+    9,8,7,6,5,4,3,2,1,0
+];
+
 let turn = 0;
 
-let pickedChamps = [];
+// 🔥 プレイヤーごとの結果
+let playerPicks = {};
+players.forEach(p => playerPicks[p] = []);
 
 function getCurrentPlayer() {
-    return order[turn] === 0 ? "Blue" : "Red";
+    return players[order[turn]];
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -71,16 +82,17 @@ document.addEventListener("DOMContentLoaded", () => {
 function pick(element) {
     const img = element.querySelector("img");
     const champ = img.alt;
+    const player = getCurrentPlayer();
 
-    pickedChamps.push(champ);
+    // 🔥 プレイヤーに記録
+    playerPicks[player].push(champ);
 
     // 履歴
     const li = document.createElement("li");
-    li.textContent = getCurrentPlayer() + " → " + champ;
+    li.textContent = player + " → " + champ;
     document.getElementById("picked").appendChild(li);
 
     element.remove();
-
     turn++;
 
     if (turn < order.length) {
@@ -92,21 +104,28 @@ function pick(element) {
 
 function finishDraft() {
     document.getElementById("currentPlayer").textContent = "終了";
-
-    // チャンプ一覧非表示
     document.getElementById("champions").style.display = "none";
 
-    // 結果表示
     const resultDiv = document.getElementById("result");
     resultDiv.style.display = "block";
 
-    pickedChamps.forEach(champ => {
-        const img = document.createElement("img");
-        img.src = `https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${champ}.png`;
-        resultDiv.appendChild(img);
-    });
+    // 🔥 追加（これ重要）
+    resultDiv.innerHTML = "<h2>🎉 ピック結果</h2>";
+
+    for (const player in playerPicks) {
+        const row = document.createElement("div");
+
+        const title = document.createElement("h3");
+        title.textContent = player;
+        row.appendChild(title);
+
+        playerPicks[player].forEach(champ => {
+            const img = document.createElement("img");
+            img.src = `https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${champ}.png`;
+            row.appendChild(img);
+        });
+
+        resultDiv.appendChild(row);
+    }
 }
 </script>
-
-</body>
-</html>
