@@ -1,134 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>LoL Draft Tool</title>
+    <title>LoL Draft</title>
     <style>
         body {
-            background: #0b1420;
+            background: #0a0f1c;
             color: white;
             font-family: Arial;
             text-align: center;
         }
 
-        .champ-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
         .champ {
+            display: inline-block;
             margin: 5px;
             cursor: pointer;
-            transition: 0.2s;
         }
 
-        .champ:hover {
-            transform: scale(1.1);
-        }
-
-        img {
+        .champ img {
             width: 80px;
+            border: 2px solid #555;
+            border-radius: 8px;
         }
 
-        input {
+        .champ:hover img {
+            border-color: gold;
+        }
+
+        #result img {
+            width: 100px;
             margin: 5px;
-            padding: 5px;
-        }
-
-        button {
-            padding: 8px;
-            margin: 10px;
-            cursor: pointer;
         }
     </style>
 </head>
-
 <body>
 
 <h1>LoL Draft Tool</h1>
 
-<!-- 設定 -->
-<div>
-    <h3>プレイヤー名（カンマ区切り）</h3>
-    <input id="playerInput" value="P1,P2,P3,P4,P5,P6,P7,P8,P9,P10" size="50">
-
-    <br>
-
-    <label>
-        <input type="checkbox" id="snakeToggle" checked>
-        スネーク順
-    </label>
-
-    <br>
-
-    <label>
-        ピック数:
-        <input type="number" id="pickCount" value="20" min="1">
-    </label>
-
-    <br>
-
-    <button onclick="startDraft()">ドラフト開始</button>
-</div>
-
-<hr>
-
-<h2>現在のターン: <span id="currentPlayer">-</span></h2>
+<h2>現在のターン: <span id="currentPlayer"></span></h2>
 
 <h2>ピック履歴</h2>
 <ul id="picked"></ul>
 
-<div id="champions" class="champ-grid">
+<div id="champions">
     {% for champ in champions %}
         <div class="champ" onclick="pick(this)">
-            <img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/{{ champ }}.png">
-            <p>{{ champ }}</p>
+            <img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/{{ champ }}.png" alt="{{ champ }}">
         </div>
     {% endfor %}
 </div>
 
+<!-- 結果表示 -->
+<div id="result" style="display:none;">
+    <h2>🎉 ピック結果</h2>
+</div>
+
 <script>
-let players = [];
-let order = [];
+const order = [0,1,1,0,0,1,1,0,0,1];
 let turn = 0;
 
-function startDraft() {
-    const input = document.getElementById("playerInput").value;
-    players = input.split(",").map(p => p.trim());
+let pickedChamps = [];
 
-    const snake = document.getElementById("snakeToggle").checked;
-    const pickCount = parseInt(document.getElementById("pickCount").value);
-
-    order = [];
-
-    if (snake) {
-        let forward = [...Array(players.length).keys()];
-        let backward = [...forward].reverse();
-        let full = forward.concat(backward);
-
-        for (let i = 0; i < pickCount; i++) {
-            order.push(full[i % full.length]);
-        }
-    } else {
-        for (let i = 0; i < pickCount; i++) {
-            order.push(i % players.length);
-        }
-    }
-
-    turn = 0;
-    document.getElementById("picked").innerHTML = "";
-    document.getElementById("currentPlayer").textContent = players[order[0]];
+function getCurrentPlayer() {
+    return order[turn] === 0 ? "Blue" : "Red";
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("currentPlayer").textContent = getCurrentPlayer();
+});
+
 function pick(element) {
-    if (turn >= order.length) return;
+    const img = element.querySelector("img");
+    const champ = img.alt;
 
-    const champ = element.querySelector("p").innerText;
-    const player = players[order[turn]];
+    pickedChamps.push(champ);
 
+    // 履歴
     const li = document.createElement("li");
-    li.textContent = player + " → " + champ;
+    li.textContent = getCurrentPlayer() + " → " + champ;
     document.getElementById("picked").appendChild(li);
 
     element.remove();
@@ -136,10 +84,27 @@ function pick(element) {
     turn++;
 
     if (turn < order.length) {
-        document.getElementById("currentPlayer").textContent = players[order[turn]];
+        document.getElementById("currentPlayer").textContent = getCurrentPlayer();
     } else {
-        document.getElementById("currentPlayer").textContent = "終了";
+        finishDraft();
     }
+}
+
+function finishDraft() {
+    document.getElementById("currentPlayer").textContent = "終了";
+
+    // チャンプ一覧非表示
+    document.getElementById("champions").style.display = "none";
+
+    // 結果表示
+    const resultDiv = document.getElementById("result");
+    resultDiv.style.display = "block";
+
+    pickedChamps.forEach(champ => {
+        const img = document.createElement("img");
+        img.src = `https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${champ}.png`;
+        resultDiv.appendChild(img);
+    });
 }
 </script>
 
