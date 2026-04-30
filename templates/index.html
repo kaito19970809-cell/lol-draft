@@ -5,6 +5,18 @@
 </head>
 <body>
     <h1>LoL Draft Tool</h1>
-    <button>プレイヤー参加</button>
+
+    <form method="POST">
+        <input type="text" name="name" placeholder="プレイヤー名">
+        <button type="submit">追加</button>
+    </form>
+
+    <h2>プレイヤー一覧</h2>
+    <ul>
+        {% for player in players %}
+            <li>{{ player }}</li>
+        {% endfor %}
+    </ul>
+
 </body>
 </html>
