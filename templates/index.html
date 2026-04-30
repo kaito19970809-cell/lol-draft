@@ -4,19 +4,46 @@
     <title>LoL Draft</title>
 </head>
 <body>
-    <h1>LoL Draft Tool</h1>
 
-    <form method="POST">
-        <input type="text" name="name" placeholder="プレイヤー名">
-        <button type="submit">追加</button>
-    </form>
+<h1>LoL Draft Tool</h1>
 
-    <h2>プレイヤー一覧</h2>
-    <ul>
-        {% for player in players %}
-            <li>{{ player }}</li>
+<!-- プレイヤー追加 -->
+<form method="POST">
+    <input type="text" name="name" placeholder="プレイヤー名">
+    <button type="submit" name="add_player">追加</button>
+</form>
+
+<h2>プレイヤー一覧</h2>
+<ul>
+{% for p in players %}
+<li>{{ p }}</li>
+{% endfor %}
+</ul>
+
+<h2>ピック状況</h2>
+<ul>
+{% for player, champ in picks.items() %}
+<li>{{ player }} → {{ champ }}</li>
+{% endfor %}
+</ul>
+
+<h2>チャンピオン選択</h2>
+
+{% if turn < players|length %}
+<p>現在のターン: {{ players[turn] }}</p>
+
+<form method="POST">
+    <select name="champion">
+        {% for c in champions %}
+        <option value="{{ c }}">{{ c }}</option>
         {% endfor %}
-    </ul>
+    </select>
+    <button type="submit" name="pick">ピック</button>
+</form>
+
+{% else %}
+<p>全員ピック完了！</p>
+{% endif %}
 
 </body>
 </html>
