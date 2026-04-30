@@ -1,18 +1,24 @@
 from flask import Flask, render_template
 import random
+import requests
 
 app = Flask(__name__)
 
-champions = [
-    "Ahri", "Yasuo", "Zed", "Lux", "Ezreal", "Jinx", "Thresh", "LeeSin",
-    "Katarina", "Darius", "Garen", "Ashe", "Vayne", "Riven", "Akali",
-    "Sylas", "Kaisa", "Sett", "Yone", "Blitzcrank",
-    "Orianna", "Fiora", "Camille", "Draven", "Samira"
-]
+# Riot Data Dragonから全チャンピオン取得
+def get_all_champions():
+    url = "https://ddragon.leagueoflegends.com/cdn/13.1.1/data/en_US/champion.json"
+    data = requests.get(url).json()
+    
+    champs = list(data["data"].keys())
+    return champs
 
 @app.route("/")
 def home():
-    selected = random.sample(champions, 20)  # 重複なしで20体
+    all_champs = get_all_champions()
+    
+    # ランダムで20体
+    selected = random.sample(all_champs, 20)
+
     return render_template("index.html", champions=selected)
 
 if __name__ == "__main__":
