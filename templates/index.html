@@ -12,14 +12,14 @@
 <h2>ピック履歴</h2>
 <ul id="picked"></ul>
 
-<div id="champions">
+<div id="champions" style="display:flex; flex-wrap:wrap; width:800px;">
     {% for champ in champions %}
-        <div onclick="pick(this)" style="display:inline-block; margin:5px; padding:10px; background:lightgray; cursor:pointer;">
-            {{ champ }}
+        <div onclick="pick(this)" style="margin:5px; cursor:pointer;">
+            <img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/{{ champ }}.png" width="80">
+            <p style="text-align:center; margin:0;">{{ champ }}</p>
         </div>
     {% endfor %}
 </div>
-
 <script>
 const basePlayers = [
     "Player1","Player2","Player3","Player4","Player5",
@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function pick(element) {
-    const champ = element.innerText;
+    const champ = element.querySelector("p").innerText;
 
     const li = document.createElement("li");
     li.textContent = getCurrentPlayer() + " → " + champ;
