@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 players = []
 picks = {}  # {プレイヤー名: チャンピオン}
-champions = [champions = [champions = [
+champions = [champions = [
     "Ahri", "Zed", "Lux", "Yasuo", "Jinx",
     "LeeSin", "Thresh", "Ezreal", "Katarina", "Darius",
     "Fiora", "Akali", "Vayne", "Riven", "Sylas",
