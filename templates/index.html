@@ -1,70 +1,39 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>LoL Draft</title>
-    <style>
-        .champ {
-            display: inline-block;
-            padding: 10px;
-            margin: 5px;
-            background: lightgray;
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-
-<h1>LoL Draft Tool</h1>
-
-<h2>現在のターン: <span id="currentPlayer"></span></h2>
-
-<h2>ピック履歴</h2>
-<ul id="picked"></ul>
-
-<div id="champions">
-    {% for champ in champions %}
-        <div class="champ" onclick="pick(this)">
-            {{ champ }}
-        </div>
-    {% endfor %}
-</div>
-
 <script>
-// プレイヤー（仮）
-const basePlayers = [
-    "Player1","Player2","Player3","Player4","Player5",
-    "Player6","Player7","Player8","Player9","Player10"
+// プレイヤー
+const players = [
+ "P1","P2","P3","P4","P5",
+ "P6","P7","P8","P9","P10"
 ];
 
-// 2回ずつにする
-const players = basePlayers.flatMap(p => [p, p]);
-
-// スネーク順（インデックス）
-const order = [0,1,1,0,0,1,1,0,0,1];
+// スネーク順（20ターン）
+const order = [
+ 0,1,2,3,4,5,6,7,8,9,
+ 9,8,7,6,5,4,3,2,1,0
+];
 
 let turn = 0;
 
+// 現在プレイヤー取得
 function getCurrentPlayer() {
-    const team = order[turn];
-    return team === 0 ? "Blue" : "Red";
+    return players[order[turn]];
 }
 
-let turn = 0;
-
 // 初期表示
-document.getElementById("currentPlayer").textContent = players[turn];
+document.getElementById("currentPlayer").textContent = getCurrentPlayer();
 
 function pick(element) {
     const champ = element.innerText;
-
     const player = getCurrentPlayer();
 
+    // 履歴追加
     const li = document.createElement("li");
     li.textContent = player + " → " + champ;
     document.getElementById("picked").appendChild(li);
 
+    // 消す
     element.remove();
 
+    // 次へ
     turn++;
 
     if (turn < order.length) {
@@ -73,24 +42,4 @@ function pick(element) {
         document.getElementById("currentPlayer").textContent = "終了";
     }
 }
-    // 履歴に追加
-    const li = document.createElement("li");
-    li.textContent = players[turn] + " → " + champ;
-    document.getElementById("picked").appendChild(li);
-
-    // 消す
-    element.remove();
-
-    // 次のターン
-    turn++;
-
-    if (turn < players.length) {
-        document.getElementById("currentPlayer").textContent = getCurrentPlayer();
-    } else {
-        document.getElementById("currentPlayer").textContent = "終了";
-    }
-}
 </script>
-
-</body>
-</html>
