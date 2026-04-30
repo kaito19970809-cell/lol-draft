@@ -1,45 +1,19 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template
+import random
 
 app = Flask(__name__)
 
-players = []
-picks = {}  # {プレイヤー名: チャンピオン}
-champions = [champions = [
-    "Ahri", "Zed", "Lux", "Yasuo", "Jinx",
-    "LeeSin", "Thresh", "Ezreal", "Katarina", "Darius",
-    "Fiora", "Akali", "Vayne", "Riven", "Sylas",
-    "Orianna", "Leona", "Draven", "Zyra", "Ekko"
-]]
+champions = [
+    "Ahri", "Yasuo", "Zed", "Lux", "Ezreal", "Jinx", "Thresh", "LeeSin",
+    "Katarina", "Darius", "Garen", "Ashe", "Vayne", "Riven", "Akali",
+    "Sylas", "Kaisa", "Sett", "Yone", "Blitzcrank",
+    "Orianna", "Fiora", "Camille", "Draven", "Samira"
+]
 
-turn = 0
-
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
 def home():
-    global turn
-
-    if request.method == "POST":
-
-        # プレイヤー追加
-        if "add_player" in request.form:
-            name = request.form.get("name")
-            if name:
-                players.append(name)
-
-        # ピック
-        elif "pick" in request.form:
-            if turn < len(players):
-                champ = request.form.get("champion")
-                player = players[turn]
-                picks[player] = champ
-                turn += 1
-
-    return render_template(
-        "index.html",
-        players=players,
-        picks=picks,
-        champions=champions,
-        turn=turn
-    )
+    selected = random.sample(champions, 20)  # 重複なしで20体
+    return render_template("index.html", champions=selected)
 
 if __name__ == "__main__":
     app.run()
