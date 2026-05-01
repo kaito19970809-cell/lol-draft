@@ -1,0 +1,2204 @@
+[
+  {
+    "name": "Aatrox",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Aatrox.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Ahri",
+    "roles": [
+      "MID",
+      "JG"
+    ],
+    "tags": [
+      "Mage",
+      "Assassin"
+    ],
+    "image": "Ahri.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Akali",
+    "roles": [
+      "JG"
+    ],
+    "tags": [
+      "Assassin"
+    ],
+    "image": "Akali.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Akshan",
+    "roles": [
+      "JG",
+      "ADC"
+    ],
+    "tags": [
+      "Marksman",
+      "Assassin"
+    ],
+    "image": "Akshan.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Alistar",
+    "roles": [
+      "TOP",
+      "SUP"
+    ],
+    "tags": [
+      "Tank",
+      "Support"
+    ],
+    "image": "Alistar.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Amumu",
+    "roles": [
+      "TOP",
+      "MID"
+    ],
+    "tags": [
+      "Tank",
+      "Mage"
+    ],
+    "image": "Amumu.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Anivia",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Mage",
+      "Support"
+    ],
+    "image": "Anivia.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Annie",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Annie.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Aphelios",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Aphelios.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Ashe",
+    "roles": [
+      "SUP",
+      "ADC"
+    ],
+    "tags": [
+      "Marksman",
+      "Support"
+    ],
+    "image": "Ashe.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "AurelionSol",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "AurelionSol.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Azir",
+    "roles": [
+      "MID",
+      "ADC"
+    ],
+    "tags": [
+      "Mage",
+      "Marksman"
+    ],
+    "image": "Azir.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Bard",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Mage"
+    ],
+    "image": "Bard.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Belveth",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter"
+    ],
+    "image": "Belveth.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Blitzcrank",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank",
+      "Fighter"
+    ],
+    "image": "Blitzcrank.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Brand",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Brand.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Braum",
+    "roles": [
+      "TOP",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Tank"
+    ],
+    "image": "Braum.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Briar",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "Briar.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Caitlyn",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Caitlyn.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Camille",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Camille.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Cassiopeia",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Cassiopeia.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Chogath",
+    "roles": [
+      "TOP",
+      "MID"
+    ],
+    "tags": [
+      "Tank",
+      "Mage"
+    ],
+    "image": "Chogath.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Corki",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Corki.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Darius",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Darius.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Diana",
+    "roles": [
+      "TOP",
+      "MID"
+    ],
+    "tags": [
+      "Fighter",
+      "Mage"
+    ],
+    "image": "Diana.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Draven",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Draven.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "DrMundo",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "DrMundo.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Ekko",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Fighter"
+    ],
+    "image": "Ekko.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Elise",
+    "roles": [
+      "TOP",
+      "MID"
+    ],
+    "tags": [
+      "Mage",
+      "Fighter"
+    ],
+    "image": "Elise.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Evelynn",
+    "roles": [
+      "MID",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Mage"
+    ],
+    "image": "Evelynn.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Ezreal",
+    "roles": [
+      "MID",
+      "ADC"
+    ],
+    "tags": [
+      "Marksman",
+      "Mage"
+    ],
+    "image": "Ezreal.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Fiddlesticks",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Mage",
+      "Support"
+    ],
+    "image": "Fiddlesticks.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Fiora",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "Fiora.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Fizz",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Fighter"
+    ],
+    "image": "Fizz.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Galio",
+    "roles": [
+      "TOP",
+      "MID"
+    ],
+    "tags": [
+      "Tank",
+      "Mage"
+    ],
+    "image": "Galio.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Gangplank",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter"
+    ],
+    "image": "Gangplank.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Garen",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Garen.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Gnar",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Gnar.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Gragas",
+    "roles": [
+      "TOP",
+      "MID"
+    ],
+    "tags": [
+      "Fighter",
+      "Mage"
+    ],
+    "image": "Gragas.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Graves",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Graves.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Gwen",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "Gwen.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Hecarim",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Hecarim.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Heimerdinger",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Mage",
+      "Support"
+    ],
+    "image": "Heimerdinger.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Hwei",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Hwei.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Illaoi",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Illaoi.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Irelia",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "Irelia.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Ivern",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Mage"
+    ],
+    "image": "Ivern.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Janna",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Mage"
+    ],
+    "image": "Janna.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "JarvanIV",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank",
+      "Fighter"
+    ],
+    "image": "JarvanIV.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Jax",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "Jax.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Jayce",
+    "roles": [
+      "TOP",
+      "ADC"
+    ],
+    "tags": [
+      "Fighter",
+      "Marksman"
+    ],
+    "image": "Jayce.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Jhin",
+    "roles": [
+      "MID",
+      "ADC"
+    ],
+    "tags": [
+      "Marksman",
+      "Mage"
+    ],
+    "image": "Jhin.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Jinx",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Jinx.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Kaisa",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Kaisa.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Kalista",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Kalista.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Karma",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Mage",
+      "Support"
+    ],
+    "image": "Karma.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Karthus",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Karthus.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Kassadin",
+    "roles": [
+      "MID",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Mage"
+    ],
+    "image": "Kassadin.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Katarina",
+    "roles": [
+      "MID",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Mage"
+    ],
+    "image": "Katarina.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Kayle",
+    "roles": [
+      "TOP",
+      "SUP"
+    ],
+    "tags": [
+      "Fighter",
+      "Support"
+    ],
+    "image": "Kayle.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Kayn",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "Kayn.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Kennen",
+    "roles": [
+      "MID",
+      "ADC"
+    ],
+    "tags": [
+      "Mage",
+      "Marksman"
+    ],
+    "image": "Kennen.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Khazix",
+    "roles": [
+      "JG"
+    ],
+    "tags": [
+      "Assassin"
+    ],
+    "image": "Khazix.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Kindred",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Kindred.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Kled",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Kled.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "KogMaw",
+    "roles": [
+      "MID",
+      "ADC"
+    ],
+    "tags": [
+      "Marksman",
+      "Mage"
+    ],
+    "image": "KogMaw.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "KSante",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank",
+      "Fighter"
+    ],
+    "image": "KSante.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Leblanc",
+    "roles": [
+      "MID",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Mage"
+    ],
+    "image": "Leblanc.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "LeeSin",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "LeeSin.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Leona",
+    "roles": [
+      "TOP",
+      "SUP"
+    ],
+    "tags": [
+      "Tank",
+      "Support"
+    ],
+    "image": "Leona.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Lillia",
+    "roles": [
+      "TOP",
+      "MID"
+    ],
+    "tags": [
+      "Fighter",
+      "Mage"
+    ],
+    "image": "Lillia.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Lissandra",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Lissandra.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Lucian",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Lucian.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Lulu",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Mage"
+    ],
+    "image": "Lulu.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Lux",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Mage",
+      "Support"
+    ],
+    "image": "Lux.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Malphite",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank",
+      "Fighter"
+    ],
+    "image": "Malphite.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Malzahar",
+    "roles": [
+      "MID",
+      "JG"
+    ],
+    "tags": [
+      "Mage",
+      "Assassin"
+    ],
+    "image": "Malzahar.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Maokai",
+    "roles": [
+      "TOP",
+      "MID"
+    ],
+    "tags": [
+      "Tank",
+      "Mage"
+    ],
+    "image": "Maokai.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "MasterYi",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Fighter"
+    ],
+    "image": "MasterYi.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Milio",
+    "roles": [
+      "SUP"
+    ],
+    "tags": [
+      "Support"
+    ],
+    "image": "Milio.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "MissFortune",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "MissFortune.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "MonkeyKing",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "MonkeyKing.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Mordekaiser",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter"
+    ],
+    "image": "Mordekaiser.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Morgana",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Mage",
+      "Support"
+    ],
+    "image": "Morgana.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Naafiri",
+    "roles": [
+      "JG"
+    ],
+    "tags": [
+      "Assassin"
+    ],
+    "image": "Naafiri.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Nami",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Mage"
+    ],
+    "image": "Nami.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Nasus",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Nasus.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Nautilus",
+    "roles": [
+      "TOP",
+      "SUP"
+    ],
+    "tags": [
+      "Tank",
+      "Support"
+    ],
+    "image": "Nautilus.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Neeko",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Mage",
+      "Support"
+    ],
+    "image": "Neeko.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Nidalee",
+    "roles": [
+      "MID",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Mage"
+    ],
+    "image": "Nidalee.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Nilah",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "Nilah.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Nocturne",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Fighter"
+    ],
+    "image": "Nocturne.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Nunu",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank",
+      "Fighter"
+    ],
+    "image": "Nunu.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Olaf",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Olaf.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Orianna",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Mage",
+      "Support"
+    ],
+    "image": "Orianna.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Ornn",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank",
+      "Fighter"
+    ],
+    "image": "Ornn.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Pantheon",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "Pantheon.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Poppy",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank",
+      "Fighter"
+    ],
+    "image": "Poppy.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Pyke",
+    "roles": [
+      "SUP",
+      "JG"
+    ],
+    "tags": [
+      "Support",
+      "Assassin"
+    ],
+    "image": "Pyke.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Qiyana",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Fighter"
+    ],
+    "image": "Qiyana.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Quinn",
+    "roles": [
+      "JG",
+      "ADC"
+    ],
+    "tags": [
+      "Marksman",
+      "Assassin"
+    ],
+    "image": "Quinn.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Rakan",
+    "roles": [
+      "SUP"
+    ],
+    "tags": [
+      "Support"
+    ],
+    "image": "Rakan.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Rammus",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank",
+      "Fighter"
+    ],
+    "image": "Rammus.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "RekSai",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter"
+    ],
+    "image": "RekSai.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Rell",
+    "roles": [
+      "TOP",
+      "SUP"
+    ],
+    "tags": [
+      "Tank",
+      "Support"
+    ],
+    "image": "Rell.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Renata",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Mage"
+    ],
+    "image": "Renata.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Renekton",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Renekton.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Rengar",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Fighter"
+    ],
+    "image": "Rengar.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Riven",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "Riven.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Rumble",
+    "roles": [
+      "TOP",
+      "MID"
+    ],
+    "tags": [
+      "Fighter",
+      "Mage"
+    ],
+    "image": "Rumble.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Ryze",
+    "roles": [
+      "TOP",
+      "MID"
+    ],
+    "tags": [
+      "Mage",
+      "Fighter"
+    ],
+    "image": "Ryze.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Samira",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Samira.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Sejuani",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank",
+      "Fighter"
+    ],
+    "image": "Sejuani.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Senna",
+    "roles": [
+      "SUP",
+      "ADC"
+    ],
+    "tags": [
+      "Marksman",
+      "Support"
+    ],
+    "image": "Senna.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Seraphine",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Mage",
+      "Support"
+    ],
+    "image": "Seraphine.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Sett",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Sett.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Shaco",
+    "roles": [
+      "JG"
+    ],
+    "tags": [
+      "Assassin"
+    ],
+    "image": "Shaco.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Shen",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank"
+    ],
+    "image": "Shen.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Shyvana",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Shyvana.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Singed",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank",
+      "Fighter"
+    ],
+    "image": "Singed.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Sion",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank",
+      "Fighter"
+    ],
+    "image": "Sion.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Sivir",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Sivir.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Skarner",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Skarner.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Sona",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Mage"
+    ],
+    "image": "Sona.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Soraka",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Mage"
+    ],
+    "image": "Soraka.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Swain",
+    "roles": [
+      "TOP",
+      "MID"
+    ],
+    "tags": [
+      "Mage",
+      "Fighter"
+    ],
+    "image": "Swain.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Sylas",
+    "roles": [
+      "MID",
+      "JG"
+    ],
+    "tags": [
+      "Mage",
+      "Assassin"
+    ],
+    "image": "Sylas.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Syndra",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Syndra.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "TahmKench",
+    "roles": [
+      "TOP",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Tank"
+    ],
+    "image": "TahmKench.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Taliyah",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Mage",
+      "Support"
+    ],
+    "image": "Taliyah.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Talon",
+    "roles": [
+      "JG"
+    ],
+    "tags": [
+      "Assassin"
+    ],
+    "image": "Talon.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Taric",
+    "roles": [
+      "TOP",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Fighter"
+    ],
+    "image": "Taric.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Teemo",
+    "roles": [
+      "JG",
+      "ADC"
+    ],
+    "tags": [
+      "Marksman",
+      "Assassin"
+    ],
+    "image": "Teemo.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Thresh",
+    "roles": [
+      "TOP",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Fighter"
+    ],
+    "image": "Thresh.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Tristana",
+    "roles": [
+      "JG",
+      "ADC"
+    ],
+    "tags": [
+      "Marksman",
+      "Assassin"
+    ],
+    "image": "Tristana.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Trundle",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Trundle.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Tryndamere",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "Tryndamere.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "TwistedFate",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "TwistedFate.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Twitch",
+    "roles": [
+      "JG",
+      "ADC"
+    ],
+    "tags": [
+      "Marksman",
+      "Assassin"
+    ],
+    "image": "Twitch.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Udyr",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Udyr.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Urgot",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Urgot.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Varus",
+    "roles": [
+      "MID",
+      "ADC"
+    ],
+    "tags": [
+      "Marksman",
+      "Mage"
+    ],
+    "image": "Varus.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Vayne",
+    "roles": [
+      "JG",
+      "ADC"
+    ],
+    "tags": [
+      "Marksman",
+      "Assassin"
+    ],
+    "image": "Vayne.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Veigar",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Veigar.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Velkoz",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Velkoz.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Vex",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Vex.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Vi",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "Vi.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Viego",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Fighter"
+    ],
+    "image": "Viego.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Viktor",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Viktor.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Vladimir",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Vladimir.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Volibear",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Volibear.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Warwick",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Warwick.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Xayah",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Xayah.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Xerath",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Xerath.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "XinZhao",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "XinZhao.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Yasuo",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Fighter",
+      "Assassin"
+    ],
+    "image": "Yasuo.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Yone",
+    "roles": [
+      "TOP",
+      "JG"
+    ],
+    "tags": [
+      "Assassin",
+      "Fighter"
+    ],
+    "image": "Yone.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Yorick",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Fighter",
+      "Tank"
+    ],
+    "image": "Yorick.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Yuumi",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Mage"
+    ],
+    "image": "Yuumi.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Zac",
+    "roles": [
+      "TOP"
+    ],
+    "tags": [
+      "Tank",
+      "Fighter"
+    ],
+    "image": "Zac.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Zed",
+    "roles": [
+      "JG"
+    ],
+    "tags": [
+      "Assassin"
+    ],
+    "image": "Zed.png",
+    "difficulty": 2,
+    "range": "melee"
+  },
+  {
+    "name": "Zeri",
+    "roles": [
+      "ADC"
+    ],
+    "tags": [
+      "Marksman"
+    ],
+    "image": "Zeri.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Ziggs",
+    "roles": [
+      "MID"
+    ],
+    "tags": [
+      "Mage"
+    ],
+    "image": "Ziggs.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Zilean",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Support",
+      "Mage"
+    ],
+    "image": "Zilean.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Zoe",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Mage",
+      "Support"
+    ],
+    "image": "Zoe.png",
+    "difficulty": 2,
+    "range": "ranged"
+  },
+  {
+    "name": "Zyra",
+    "roles": [
+      "MID",
+      "SUP"
+    ],
+    "tags": [
+      "Mage",
+      "Support"
+    ],
+    "image": "Zyra.png",
+    "difficulty": 2,
+    "range": "ranged"
+  }
+]

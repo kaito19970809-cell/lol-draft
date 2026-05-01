@@ -1,103 +1,140 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>LoL Draft Tool</title>
-    <style>
-        body {
-            background: #0a0f1c;
-            color: white;
-            font-family: Arial;
-            text-align: center;
-        }
+<meta charset="UTF-8">
+<title>LoL Draft Tool</title>
 
-        h1 {
-            color: gold;
-        }
+<style>
+body {
+    margin: 0;
+    background: radial-gradient(circle at top, #0a1a3f, #050b1a);
+    color: white;
+    font-family: "Segoe UI", Arial;
+    text-align: center;
+}
 
-        button {
-            margin: 10px;
-            padding: 10px 20px;
-            background: gold;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-        }
+/* タイトル */
+h1 {
+    color: gold;
+    margin-top: 20px;
+    text-shadow: 0 0 10px gold;
+}
 
-        .champ {
-            display: inline-block;
-            margin: 5px;
-            cursor: pointer;
-        }
+/* ボタン */
+button {
+    background: gold;
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
+    margin: 10px;
+}
 
-        .champ img {
-            width: 80px;
-            border: 2px solid #444;
-            border-radius: 8px;
-            transition: 0.2s;
-        }
+button:hover {
+    background: #ffd700cc;
+}
 
-        .champ:hover img {
-            border-color: gold;
-            transform: scale(1.1);
-        }
+/* チャンピオン一覧 */
+#champions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 20px;
+}
 
-        #result img {
-            width: 100px;
-            margin: 5px;
-        }
+/* チャンプカード */
+.champ {
+    margin: 6px;
+    transition: 0.2s;
+}
 
-        .player-card {
-            border: 1px solid #555;
-            background: #111;
-            padding: 10px;
-            margin: 10px;
-            display: inline-block;
-            width: 200px;
-        }
-    </style>
+.champ img {
+    width: 70px;
+    border-radius: 10px;
+    border: 2px solid #333;
+    transition: 0.2s;
+}
+
+.champ:hover img {
+    transform: scale(1.2);
+    border-color: gold;
+    box-shadow: 0 0 10px gold;
+}
+
+/* ピック履歴 */
+#picked {
+    list-style: none;
+    padding: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#picked li {
+    margin: 2px;
+    font-size: 14px;
+}
+
+/* 結果エリア */
+#result {
+    display: none;
+    margin-top: 20px;
+}
+
+/* プレイヤーパネル */
+.player-box {
+    display: inline-block;
+    background: #111a33;
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 10px;
+    min-width: 120px;
+}
+
+.player-box h3 {
+    margin: 5px;
+    color: gold;
+}
+
+/* 結果画像 */
+.player-box img {
+    width: 60px;
+    margin: 3px;
+    border-radius: 6px;
+}
+</style>
 </head>
+
 <body>
 
 <h1>LoL Draft Tool</h1>
 
-<button onclick="location.reload()">もう一回ドラフト</button>
+<button onclick="location.reload()">🔄 もう一回ドラフト</button>
 
 <h2>現在のターン: <span id="currentPlayer"></span></h2>
 
-<h2>ピック履歴</h2>
+<h3>ピック履歴</h3>
 <ul id="picked"></ul>
 
 <div id="champions">
     {% for champ in champions %}
-        <div class="champ" onclick="pick(this)">
-            <img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/{{ champ }}.png" alt="{{ champ }}">
-        </div>
+    <div class="champ" onclick="pick(this)">
+        <img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/{{ champ }}.png" alt="{{ champ }}">
+    </div>
     {% endfor %}
 </div>
 
-<div id="result" style="display:none;"></div>
+<div id="result">
+    <h2>🎉 ピック結果</h2>
+</div>
 
 <script>
-// 🔥 プレイヤー入力（安全版）
-let input = prompt("プレイヤー名をカンマ区切りで入力（10人）");
+// プレイヤー入力
+const players = prompt("プレイヤー名（10人）をカンマ区切りで入力")
+    .split(",");
 
-let players;
-
-if (!input) {
-    players = [
-        "P1","P2","P3","P4","P5",
-        "P6","P7","P8","P9","P10"
-    ];
-} else {
-    players = input.split(",");
-
-    if (players.length !== 10) {
-        alert("10人入力してください");
-        location.reload();
-    }
-}
-
-// 🔥 スネーク順（2巡）
+// ピック順（往復）
 const order = [
     0,1,2,3,4,5,6,7,8,9,
     9,8,7,6,5,4,3,2,1,0
@@ -105,26 +142,20 @@ const order = [
 
 let turn = 0;
 
-// 🔥 プレイヤーごとの結果
+// プレイヤーごとの結果
 let playerPicks = {};
-players.forEach(p => playerPicks[p] = []);
+players.forEach(p => playerPicks[p.trim()] = []);
 
 function getCurrentPlayer() {
-    return players[order[turn]];
+    return players[order[turn]].trim();
 }
 
-// 初期表示
-document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("currentPlayer").textContent = getCurrentPlayer();
-});
+document.getElementById("currentPlayer").textContent = getCurrentPlayer();
 
-// ピック処理
 function pick(element) {
-    const img = element.querySelector("img");
-    const champ = img.alt;
+    const champ = element.querySelector("img").alt;
     const player = getCurrentPlayer();
 
-    // 記録
     playerPicks[player].push(champ);
 
     // 履歴
@@ -132,9 +163,7 @@ function pick(element) {
     li.textContent = player + " → " + champ;
     document.getElementById("picked").appendChild(li);
 
-    // 削除
     element.remove();
-
     turn++;
 
     if (turn < order.length) {
@@ -144,31 +173,29 @@ function pick(element) {
     }
 }
 
-// 終了処理
 function finishDraft() {
     document.getElementById("currentPlayer").textContent = "終了";
     document.getElementById("champions").style.display = "none";
 
     const resultDiv = document.getElementById("result");
     resultDiv.style.display = "block";
-
     resultDiv.innerHTML = "<h2>🎉 ピック結果</h2>";
 
     for (const player in playerPicks) {
-        const card = document.createElement("div");
-        card.className = "player-card";
+        const box = document.createElement("div");
+        box.className = "player-box";
 
         const title = document.createElement("h3");
         title.textContent = player;
-        card.appendChild(title);
+        box.appendChild(title);
 
         playerPicks[player].forEach(champ => {
             const img = document.createElement("img");
             img.src = `https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${champ}.png`;
-            card.appendChild(img);
+            box.appendChild(img);
         });
 
-        resultDiv.appendChild(card);
+        resultDiv.appendChild(box);
     }
 }
 </script>
