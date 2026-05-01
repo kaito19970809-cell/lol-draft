@@ -5,25 +5,36 @@
 <title>LoL Draft</title>
 
 <style>
-body { margin:0; background:#050b1a; color:white; font-family:Arial; }
-.container { display:flex; height:100vh; }
-
-.team { width:25%; padding:10px; }
-.blue { background:#0a1a3f; }
-.red { background:#3f0a0a; }
-
-.center { width:50%; text-align:center; }
+body {
+    margin:0;
+    background: radial-gradient(circle at top, #0a1a3f, #050b1a);
+    color:white;
+    font-family:Arial;
+}
+.container {display:flex;height:100vh;}
+.team {width:20%;text-align:center;padding:10px;}
+.blue {background:#0a1a3f;}
+.red {background:#3f0a0a;}
+.center {width:60%;text-align:center;}
 
 .champ img {
-    width:60px; margin:5px;
-    border-radius:8px; cursor:pointer;
+    width:70px;margin:5px;border-radius:10px;
+    border:2px solid #222;cursor:pointer;
 }
-.champ:hover img { transform:scale(1.2); border:2px solid gold; }
+.champ:hover img {
+    transform:scale(1.2);
+    border-color:gold;
+}
 
-#timer { font-size:40px; }
-.danger { color:red; }
+#timer {font-size:40px;}
 
-.team img { width:60px; margin:5px; }
+.active {box-shadow:0 0 20px cyan;}
+.red.active {box-shadow:0 0 20px red;}
+
+button {
+    background:gold;border:none;padding:10px;
+    margin:5px;cursor:pointer;
+}
 </style>
 </head>
 
@@ -31,13 +42,10 @@ body { margin:0; background:#050b1a; color:white; font-family:Arial; }
 
 <div class="container">
 
-<div class="team blue">
+<div class="team blue" id="blueTeam">
 <h2>BLUE</h2>
-{% for p in teamA %}
-<p>{{p.player.name}} ({{p.role}})</p>
-{% endfor %}
-<div id="bluePicks"></div>
 <div id="blueBan"></div>
+<div id="bluePicks"></div>
 </div>
 
 <div class="center">
@@ -45,88 +53,112 @@ body { margin:0; background:#050b1a; color:white; font-family:Arial; }
 <h1>LoL Draft</h1>
 <h2 id="phase"></h2>
 <h3 id="current"></h3>
-<h2 id="timer">30</h2>
+<div id="timer">30</div>
 
-<ul id="log"></ul>
+<button onclick="undo()">UNDO</button>
+<button id="confirmBtn" style="display:none;" onclick="confirmPick()">確定</button>
 
 <div id="champions">
-{% for c in champions %}
+{% for champ in champions %}
 <div class="champ" onclick="selectChamp(this)">
-<img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/{{c}}.png" alt="{{c}}">
+<img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/{{ champ }}.png" alt="{{ champ }}">
 </div>
 {% endfor %}
 </div>
 
 </div>
 
-<div class="team red">
+<div class="team red" id="redTeam">
 <h2>RED</h2>
-{% for p in teamB %}
-<p>{{p.player.name}} ({{p.role}})</p>
-{% endfor %}
-<div id="redPicks"></div>
 <div id="redBan"></div>
+<div id="redPicks"></div>
 </div>
 
 </div>
 
-<audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
 <script>
-const sequence = [
-"blue-ban","red-ban","blue-ban","red-ban",
-"blue-pick","red-pick","red-pick","blue-pick",
-"blue-pick","red-pick","red-pick","blue-pick"
-];
+const socket = io();
+const ROOM_ID = "{{ room_id }}";
+const KEY = new URLSearchParams(location.search).get("key");
+const canControl = !!KEY;
 
-let turn=0, timer=null, timeLeft=30;
+socket.emit("join",{room:ROOM_ID});
 
-function getStep(){return sequence[turn];}
-function getTeam(){return getStep().split("-")[0];}
-function isBan(){return getStep().includes("ban");}
+let selectedChamp = null;
+let timeLeft = 30;
 
-function update(){
-document.getElementById("phase").textContent=isBan()?"BAN":"PICK";
-document.getElementById("current").textContent=getTeam().toUpperCase();
-startTimer();
+socket.on("update",(state)=>{
+    render(state);
+});
+
+function render(state){
+    document.getElementById("phase").textContent =
+        state.sequence[state.turn]?.includes("ban") ? "BAN" : "PICK";
+
+    document.getElementById("current").textContent =
+        state.sequence[state.turn]?.split("-")[0];
+
+    highlight(state);
+    draw(state);
 }
 
-function startTimer(){
-clearInterval(timer);
-timeLeft=30;
-timer=setInterval(()=>{
-timeLeft--;
-let el=document.getElementById("timer");
-el.textContent=timeLeft;
-if(timeLeft<=5) el.classList.add("danger");
-if(timeLeft<=0){clearInterval(timer);turn++;update();}
-},1000);
+function draw(state){
+    updateList("bluePicks",state.bluePicks);
+    updateList("redPicks",state.redPicks);
+    updateList("blueBan",state.blueBan);
+    updateList("redBan",state.redBan);
+}
+
+function updateList(id,list){
+    const el=document.getElementById(id);
+    el.innerHTML="";
+    list.forEach(c=>{
+        const img=document.createElement("img");
+        img.src=`https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${c}.png`;
+        el.appendChild(img);
+    });
+}
+
+function highlight(state){
+    const team=state.sequence[state.turn]?.split("-")[0];
+    document.getElementById("blueTeam").classList.remove("active");
+    document.getElementById("redTeam").classList.remove("active");
+
+    if(team==="blue"){
+        document.getElementById("blueTeam").classList.add("active");
+    }else{
+        document.getElementById("redTeam").classList.add("active");
+    }
 }
 
 function selectChamp(el){
-clearInterval(timer);
-document.getElementById("sound").play();
+    if(!canControl)return;
 
-let champ=el.querySelector("img").alt;
-let team=getTeam();
+    selectedChamp=el.querySelector("img").alt;
 
-let img=document.createElement("img");
-img.src=el.querySelector("img").src;
-
-if(isBan()){
-document.getElementById(team+"Ban").appendChild(img);
-el.style.opacity=0.3;
-}else{
-document.getElementById(team+"Picks").appendChild(img);
-el.remove();
+    document.getElementById("confirmBtn").style.display="inline-block";
 }
 
-turn++;
-if(turn<sequence.length) update();
-else alert("ドラフト終了");
+function confirmPick(){
+    if(!selectedChamp)return;
+
+    if(!confirm(selectedChamp+"でOK？"))return;
+
+    socket.emit("action",{
+        room:ROOM_ID,
+        champ:selectedChamp,
+        key:KEY
+    });
+
+    selectedChamp=null;
+    document.getElementById("confirmBtn").style.display="none";
 }
 
-update();
+function undo(){
+    socket.emit("undo",{room:ROOM_ID,key:KEY});
+}
 </script>
 
 </body>
