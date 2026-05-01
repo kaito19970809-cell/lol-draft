@@ -7,49 +7,107 @@
 <style>
 body {
     margin: 0;
-    background: radial-gradient(circle at top, #0a1a3f, #050b1a);
+    background: #050b1a;
     color: white;
     font-family: Arial;
-    text-align: center;
 }
 
-h1 { color: gold; }
-
-#champions {
+/* レイアウト */
+.container {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    height: 100vh;
 }
 
+/* チーム */
+.team {
+    width: 25%;
+    padding: 10px;
+}
+
+.blue {
+    background: linear-gradient(#0a1a3f, #000);
+}
+
+.red {
+    background: linear-gradient(#3f0a0a, #000);
+}
+
+/* 中央 */
+.center {
+    width: 50%;
+    text-align: center;
+    padding: 10px;
+}
+
+/* チャンプ */
 .champ img {
-    width: 70px;
+    width: 60px;
     margin: 5px;
     border-radius: 8px;
-    border: 2px solid #333;
+    transition: 0.2s;
 }
 
 .champ:hover img {
-    border-color: gold;
-    transform: scale(1.1);
+    transform: scale(1.2);
+    border: 2px solid gold;
 }
 
-.player-box {
-    display: inline-block;
-    background: #111;
-    margin: 10px;
-    padding: 10px;
-    border-radius: 8px;
+/* ピック表示 */
+.team img {
+    width: 60px;
+    margin: 5px;
 }
 
+/* BAN */
+.ban {
+    opacity: 0.3;
+    filter: grayscale(100%);
+}
+
+/* タイマー */
+#timer {
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.danger {
+    color: red;
+    text-shadow: 0 0 10px red;
+}
 </style>
 </head>
 
 <body>
 
-<h1>LoL Draft Tool（BANあり）</h1>
+<div class="container">
 
-<h2 id="phase">BANフェーズ</h2>
-<h2 id="current"></h2>
+<!-- 🔵 BLUE -->
+<div class="team blue">
+    <h2>BLUE</h2>
+    <div id="bluePicks"></div>
+</div>
+
+<!-- 🎯 CENTER -->
+<div class="center">
+
+<h1>LoL Draft</h1>
+
+<!-- BAN表示 -->
+<div style="display:flex; justify-content:space-between;">
+<div>
+<h3>BLUE BAN</h3>
+<div id="blueBan"></div>
+</div>
+
+<div>
+<h3>RED BAN</h3>
+<div id="redBan"></div>
+</div>
+</div>
+
+<h2 id="phase"></h2>
+<h3 id="current"></h3>
+<h2 id="timer">30</h2>
 
 <ul id="log"></ul>
 
@@ -61,7 +119,18 @@ h1 { color: gold; }
 {% endfor %}
 </div>
 
-<div id="result"></div>
+</div>
+
+<!-- 🔴 RED -->
+<div class="team red">
+    <h2>RED</h2>
+    <div id="redPicks"></div>
+</div>
+
+</div>
+
+<!-- 音 -->
+<audio id="pickSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
 
 <script>
 /* ===== チーム ===== */
@@ -78,7 +147,7 @@ const teams = {
     ]
 };
 
-/* ===== BAN → PICK 順 ===== */
+/* ===== 順番 ===== */
 const sequence = [
     "blue-ban","red-ban","blue-ban","red-ban",
     "blue-pick","red-pick","red-pick","blue-pick","blue-pick",
@@ -86,24 +155,17 @@ const sequence = [
 ];
 
 let turn = 0;
+let timeLeft = 30;
+let timer = null;
 
+/* ===== データ ===== */
 let playerPicks = {};
 Object.values(teams).flat().forEach(p => playerPicks[p] = []);
 
-let bans = [];
-
-/* ===== 現在 ===== */
-function getStep() {
-    return sequence[turn];
-}
-
-function getTeam() {
-    return getStep().split("-")[0];
-}
-
-function isBan() {
-    return getStep().includes("ban");
-}
+/* ===== 状態 ===== */
+function getStep() { return sequence[turn]; }
+function getTeam() { return getStep().split("-")[0]; }
+function isBan() { return getStep().includes("ban"); }
 
 function getPlayer() {
     const team = getTeam();
@@ -118,29 +180,95 @@ function update() {
 
     document.getElementById("current").textContent =
         getTeam().toUpperCase() + (isBan() ? " BAN" : " PICK");
+
+    startTimer();
 }
 
-update();
+/* ===== タイマー ===== */
+function startTimer() {
+    clearInterval(timer);
+    timeLeft = 30;
 
-/* ===== 選択 ===== */
+    const el = document.getElementById("timer");
+    el.textContent = timeLeft;
+
+    timer = setInterval(() => {
+        timeLeft--;
+        el.textContent = timeLeft;
+
+        if (timeLeft <= 5) {
+            el.classList.add("danger");
+        } else {
+            el.classList.remove("danger");
+        }
+
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            autoSkip();
+        }
+    }, 1000);
+}
+
+/* ===== スキップ ===== */
+function autoSkip() {
+    const li = document.createElement("li");
+    li.textContent = getTeam().toUpperCase() + " 時間切れ";
+    document.getElementById("log").appendChild(li);
+
+    turn++;
+
+    if (turn < sequence.length) {
+        update();
+    } else {
+        finish();
+    }
+}
+
+/* ===== クリック ===== */
 function selectChamp(el) {
+    clearInterval(timer);
+
+    document.getElementById("pickSound").play();
+
     const champ = el.querySelector("img").alt;
     const team = getTeam();
 
     const li = document.createElement("li");
 
     if (isBan()) {
-        bans.push(champ);
         li.textContent = team.toUpperCase() + " BAN → " + champ;
+
+        const img = document.createElement("img");
+        img.src = el.querySelector("img").src;
+        img.style.width = "50px";
+
+        if (team === "blue") {
+            document.getElementById("blueBan").appendChild(img);
+        } else {
+            document.getElementById("redBan").appendChild(img);
+        }
+
+        el.classList.add("ban");
     } else {
         const player = getPlayer();
         playerPicks[player].push(champ);
+
         li.textContent = team.toUpperCase() + " PICK → " + champ;
+
+        const img = document.createElement("img");
+        img.src = el.querySelector("img").src;
+
+        if (team === "blue") {
+            document.getElementById("bluePicks").appendChild(img);
+        } else {
+            document.getElementById("redPicks").appendChild(img);
+        }
+
+        el.remove();
     }
 
     document.getElementById("log").appendChild(li);
 
-    el.remove();
     turn++;
 
     if (turn < sequence.length) {
@@ -153,29 +281,28 @@ function selectChamp(el) {
 /* ===== 終了 ===== */
 function finish() {
     document.getElementById("current").textContent = "終了";
-    document.getElementById("champions").style.display = "none";
 
-    const res = document.getElementById("result");
+    const res = document.createElement("div");
     res.innerHTML = "<h2>結果</h2>";
 
     for (const p in playerPicks) {
-        const box = document.createElement("div");
-        box.className = "player-box";
-
-        const title = document.createElement("h3");
-        title.textContent = p;
-        box.appendChild(title);
+        const div = document.createElement("div");
+        div.innerHTML = "<h3>" + p + "</h3>";
 
         playerPicks[p].forEach(c => {
             const img = document.createElement("img");
             img.src = `https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${c}.png`;
             img.style.width = "50px";
-            box.appendChild(img);
+            div.appendChild(img);
         });
 
-        res.appendChild(box);
+        res.appendChild(div);
     }
+
+    document.body.appendChild(res);
 }
+
+update();
 </script>
 
 </body>
