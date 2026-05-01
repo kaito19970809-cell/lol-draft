@@ -5,23 +5,23 @@
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
 <style>
-body{margin:0;background:#0b0f1a;color:white;font-family:Segoe UI}
+body{background:#0b0f1a;color:white;font-family:Arial;margin:0}
 .container{display:flex;height:100vh}
-.team{width:20%;padding:10px}
+.side{width:25%;padding:10px}
+.center{width:50%;text-align:center}
 .blue{background:#0f2a44}
 .red{background:#441010}
-.center{width:60%;text-align:center}
 
-.player{background:#111;margin:6px;padding:6px;border-left:4px solid gold}
-.active{box-shadow:0 0 10px gold}
-
-.pack{display:grid;grid-template-columns:repeat(5,80px);gap:10px;margin-top:20px}
+.pack{display:grid;grid-template-columns:repeat(5,80px);gap:10px;justify-content:center}
 .pack img{width:80px;border-radius:10px;cursor:pointer}
 
-#timerCircle{
-width:100px;height:100px;border-radius:50%;
+.player img{width:50px;margin:2px}
+
+#timer{
+width:120px;height:120px;border-radius:50%;
 border:6px solid gold;margin:auto;
-display:flex;align-items:center;justify-content:center;font-size:30px
+display:flex;align-items:center;justify-content:center;
+font-size:40px
 }
 .low{border-color:red;color:red;animation:blink .5s infinite}
 @keyframes blink{50%{opacity:.3}}
@@ -29,105 +29,101 @@ display:flex;align-items:center;justify-content:center;font-size:30px
 </head>
 
 <body>
+
 <div class="container">
 
-<div class="team blue"><h2>BLUE</h2><div id="blue"></div></div>
+<div class="side blue"><h2>P1</h2><div id="p1"></div></div>
 
 <div class="center">
-<h1>Draft</h1>
+<h1>DRAFT</h1>
+<div id="round"></div>
 <div id="turn"></div>
 
-<div id="timerCircle"><span id="timerText"></span></div>
+<div id="timer"><span id="time"></span></div>
 
 <div id="pack" class="pack"></div>
+
+<div id="done"></div>
 </div>
 
-<div class="team red"><h2>RED</h2><div id="red"></div></div>
+<div class="side red"><h2>P2</h2><div id="p2"></div></div>
 
 </div>
+
+<audio id="pickSound" src="/static/pick.mp3"></audio>
 
 <script>
-const socket=io();
-const myName=prompt("名前");
+const socket = io();
+const role = "{{role}}";
 
-let state={};
-let players={{players|tojson}};
+let state = {};
+
+function myPlayer(){
+    if(role==="blue") return "P1";
+    if(role==="red") return "P2";
+    return null;
+}
 
 function currentPlayer(){
-    return players[state.turn%players.length];
-}
-
-function renderChamps(list){
-    let html="";
-    for(let i=0;i<3;i++){
-        if(list[i]){
-            html+=`<img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${list[i]}.png" width=40>`
-        }else{
-            html+=`<div style="width:40px;height:40px;background:#222;display:inline-block"></div>`
-        }
-    }
-    return html;
-}
-
-function renderTeams(){
-    const roles=["TOP","JG","MID","ADC","SUP"];
-    let b="",r="";
-
-    roles.forEach(role=>{
-        const bp=state.teams.blue[role];
-        const rp=state.teams.red[role];
-
-        const bPick=state.picks[bp.player]||[];
-        const rPick=state.picks[rp.player]||[];
-
-        b+=`<div class="player ${bp.player===currentPlayer()?'active':''}">
-        <b>${role}</b><br>${bp.player} (${bp.power})<br>
-        ${renderChamps(bPick)}</div>`;
-
-        r+=`<div class="player ${rp.player===currentPlayer()?'active':''}">
-        <b>${role}</b><br>${rp.player} (${rp.power})<br>
-        ${renderChamps(rPick)}</div>`;
-    });
-
-    document.getElementById("blue").innerHTML=b;
-    document.getElementById("red").innerHTML=r;
+    const orders = [
+        ["P1","P2","P2","P1","P1","P2","P2","P1","P1","P2"],
+        ["P2","P1","P1","P2","P2","P1","P1","P2","P2","P1"],
+        ["P1","P2","P1","P2","P1","P2","P1","P2","P1","P2"]
+    ];
+    return orders[state.round-1][state.turn];
 }
 
 function render(){
-    document.getElementById("turn").textContent="TURN: "+currentPlayer();
 
-    const pack=document.getElementById("pack");
-    pack.innerHTML="";
+    document.getElementById("round").textContent = "PACK "+state.round+"/3";
+    document.getElementById("time").textContent = state.time;
 
-    (state.packs[myName]||[]).forEach(c=>{
-        const img=document.createElement("img");
-        img.src=`https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${c}.png`;
-        img.onclick=()=>pick(c);
-        pack.appendChild(img);
-    });
-
-    document.getElementById("timerText").textContent=state.time;
-
-    if(state.time<=5){
-        document.getElementById("timerCircle").classList.add("low");
+    if(state.time <= 5){
+        document.getElementById("timer").classList.add("low");
     }else{
-        document.getElementById("timerCircle").classList.remove("low");
+        document.getElementById("timer").classList.remove("low");
     }
 
-    renderTeams();
-}
-
-function pick(c){
-    if(myName!==currentPlayer()){
-        alert("あなたのターンじゃない");
-        return;
+    if(!state.done){
+        document.getElementById("turn").textContent =
+            "TURN: "+currentPlayer();
     }
-    new Audio("/static/pick.mp3").play();
-    socket.emit("pick",{player:myName,champ:c});
+
+    const me = myPlayer();
+    const packDiv = document.getElementById("pack");
+    packDiv.innerHTML = "";
+
+    if(!state.done && me){
+        (state.packs[me]||[]).forEach(c=>{
+            const img=document.createElement("img");
+            img.src=`https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${c}.png`;
+
+            img.onclick=()=>{
+                if(me!==currentPlayer()){
+                    alert("ターンじゃない");
+                    return;
+                }
+                document.getElementById("pickSound").play();
+                socket.emit("pick",{role:role,champ:c});
+            };
+
+            packDiv.appendChild(img);
+        });
+    }
+
+    if(state.done){
+        document.getElementById("done").textContent="ドラフト完了";
+    }
+
+    document.getElementById("p1").innerHTML =
+        state.picks["P1"].map(c=>`<img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${c}.png">`).join("");
+
+    document.getElementById("p2").innerHTML =
+        state.picks["P2"].map(c=>`<img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${c}.png">`).join("");
 }
 
-socket.on("state",s=>{
-    state=s;
+socket.on("state", s=>{
+    state = s;
     render();
 });
 </script>

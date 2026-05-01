@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
-import json, random, itertools
+import json, random, time
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -9,160 +9,98 @@ socketio = SocketIO(app)
 with open("champions.json", encoding="utf-8") as f:
     champions = json.load(f)
 
-with open("players.json", encoding="utf-8") as f:
-    players_data = json.load(f)
-
-players = [p["name"] for p in players_data]
-
-# ---------- チーム分け（ロール最適化） ----------
-def best_layout(team, roles):
-    best_score = -1
-    best_assign = None
-
-    for perm in itertools.permutations(team):
-        score = 0
-        assign = {}
-
-        for i, player in enumerate(perm):
-            pdata = next(p for p in players_data if p["name"] == player)
-            role = roles[i]
-            power = pdata["roles"][role]
-            score += power
-            assign[role] = {"player": player, "power": power}
-
-        if score > best_score:
-            best_score = score
-            best_assign = assign
-
-    return best_score, best_assign
-
-
-def balance_teams():
-    roles = ["TOP","JG","MID","ADC","SUP"]
-    best = None
-    best_score = -1
-
-    for comb in itertools.combinations(players, 5):
-        A = list(comb)
-        B = [p for p in players if p not in A]
-
-        scoreA, layoutA = best_layout(A, roles)
-        scoreB, layoutB = best_layout(B, roles)
-
-        total = scoreA + scoreB
-
-        if total > best_score:
-            best_score = total
-            best = {
-                "blue": layoutA,
-                "red": layoutB
-            }
-
-    return best
-
-# ---------- フレックス制御 ----------
-def flex_weight(c):
-    n = len(c["roles"])
-    return 1.0 if n==1 else 0.6 if n==2 else 0.3
-
-# ---------- ロール補正 ----------
-ROLE_WEIGHT = {
-    "TOP":1.0,"JG":1.0,"MID":1.0,"ADC":1.6,"SUP":1.1
-}
-
-def role_weight(c):
-    return max(ROLE_WEIGHT.get(r,1.0) for r in c["roles"])
-
-# ---------- 最終重み ----------
-def final_weight(c):
-    tier_w = {"S":0.7,"A":1.0,"B":1.2,"C":1.5}
-    return tier_w[c["tier"]] * flex_weight(c) * role_weight(c)
+# ---------- ティア重み ----------
+TIER_WEIGHT = {"S":0.7,"A":1.0,"B":1.2,"C":1.5}
 
 def weighted_choice(cands):
-    ws = [final_weight(c) for c in cands]
+    ws = [TIER_WEIGHT[c["tier"]] for c in cands]
     total = sum(ws)
     r = random.uniform(0,total)
     s = 0
     for c,w in zip(cands,ws):
-        s+=w
-        if s>=r:
+        s += w
+        if s >= r:
             return c
     return random.choice(cands)
 
-# ---------- パック生成（大会仕様） ----------
-def create_packs():
-    roles = ["TOP","JG","MID","ADC","SUP"]
-    packs = {}
+# ---------- パック生成 ----------
+def create_pack():
+    result = []
+    used = set()
 
-    for p in players:
-        pack=[]
-        used=set()
+    tier_need = {"S":2,"A":3,"B":4,"C":1}
 
-        role_need={r:2 for r in roles}
-        tier_need={"S":2,"A":3,"B":4,"C":1}
-
-        for role in roles:
-            for _ in range(2):
-                cands=[c for c in champions
-                       if role in c["roles"]
-                       and c["tier"] in tier_need
-                       and tier_need[c["tier"]]>0
-                       and c["name"] not in used]
-
-                if not cands:
-                    continue
-
-                pick=weighted_choice(cands)
-                pack.append(pick)
+    for t,n in tier_need.items():
+        for _ in range(n):
+            cands = [c for c in champions if c["tier"]==t and c["name"] not in used]
+            if cands:
+                pick = weighted_choice(cands)
+                result.append(pick["name"])
                 used.add(pick["name"])
-                tier_need[pick["tier"]]-=1
 
-        # ティア補充
-        for t,n in tier_need.items():
-            for _ in range(n):
-                cands=[c for c in champions
-                       if c["tier"]==t and c["name"] not in used]
-                if cands:
-                    pick=weighted_choice(cands)
-                    pack.append(pick)
-                    used.add(pick["name"])
+    return result
 
-        packs[p]=[c["name"] for c in pack[:10]]
+# ---------- ピック順 ----------
+orders = [
+    ["P1","P2","P2","P1","P1","P2","P2","P1","P1","P2"],
+    ["P2","P1","P1","P2","P2","P1","P1","P2","P2","P1"],
+    ["P1","P2","P1","P2","P1","P2","P1","P2","P1","P2"]
+]
 
-    return packs
+players = {"blue":"P1","red":"P2"}
 
 # ---------- 状態 ----------
 state = {
-    "turn":0,
-    "picks":{},
-    "packs":{},
-    "teams":{},
-    "time":30
+    "round": 0,
+    "turn": 0,
+    "packs": {"P1": [], "P2": []},
+    "picks": {"P1": [], "P2": []},
+    "time": 30,
+    "last": time.time(),
+    "done": False
 }
 
+def start_round():
+    state["packs"]["P1"] = create_pack()
+    state["packs"]["P2"] = create_pack()
+    state["turn"] = 0
+    state["time"] = 30
+    state["last"] = time.time()
+
 # ---------- ルート ----------
-@app.route("/")
-def index():
-    return render_template("index.html", players=players)
+@app.route("/blue")
+def blue():
+    return render_template("index.html", role="blue")
+
+@app.route("/red")
+def red():
+    return render_template("index.html", role="red")
+
+@app.route("/spec")
+def spec():
+    return render_template("index.html", role="spec")
 
 # ---------- 接続 ----------
 @socketio.on("connect")
 def connect():
-    state["teams"]=balance_teams()
-    state["packs"]=create_packs()
-    state["picks"]={p:[] for p in players}
-    state["turn"]=0
-    emit("state",state)
+    if state["round"] == 0:
+        state["round"] = 1
+        start_round()
+    emit("state", state)
 
 # ---------- ピック ----------
 @socketio.on("pick")
 def pick(data):
-    player=data["player"]
-    champ=data["champ"]
+    role = data["role"]
+    champ = data["champ"]
 
-    current=players[state["turn"]%len(players)]
+    if role == "spec":
+        return
 
-    if player!=current:
+    player = players[role]
+    current = orders[state["round"]-1][state["turn"]]
+
+    if player != current:
         return
 
     if champ not in state["packs"][player]:
@@ -170,10 +108,43 @@ def pick(data):
 
     state["packs"][player].remove(champ)
     state["picks"][player].append(champ)
-    state["turn"]+=1
 
-    emit("state",state,broadcast=True)
+    other = "P2" if player=="P1" else "P1"
+    state["packs"][other].append(champ)
 
-# ---------- 起動 ----------
-if __name__=="__main__":
+    state["turn"] += 1
+
+    # タイマーリセット
+    state["time"] = 30
+    state["last"] = time.time()
+
+    # パック終了
+    if state["turn"] >= 10:
+        if state["round"] < 3:
+            state["round"] += 1
+            start_round()
+        else:
+            state["done"] = True
+
+    emit("state", state, broadcast=True)
+
+# ---------- タイマー ----------
+def timer_loop():
+    while True:
+        socketio.sleep(1)
+        remain = 30 - int(time.time() - state["last"])
+
+        if remain != state["time"]:
+            state["time"] = max(remain,0)
+
+            if state["time"] <= 0:
+                state["turn"] += 1
+                state["last"] = time.time()
+                state["time"] = 30
+
+            socketio.emit("state", state)
+
+socketio.start_background_task(timer_loop)
+
+if __name__ == "__main__":
     socketio.run(app)
