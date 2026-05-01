@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Player1",
+    "power": { "TOP": 70, "JG": 50, "MID": 60, "ADC": 40, "SUP": 30 }
+  },
+  {
+    "name": "Player2",
+    "power": { "TOP": 30, "JG": 80, "MID": 50, "ADC": 60, "SUP": 40 }
+  },
+  {
+    "name": "Player3",
+    "power": { "TOP": 60, "JG": 40, "MID": 75, "ADC": 30, "SUP": 50 }
+  },
+  {
+    "name": "Player4",
+    "power": { "TOP": 50, "JG": 60, "MID": 40, "ADC": 80, "SUP": 30 }
+  },
+  {
+    "name": "Player5",
+    "power": { "TOP": 40, "JG": 30, "MID": 50, "ADC": 60, "SUP": 80 }
+  },
+  {
+    "name": "Player6",
+    "power": { "TOP": 70, "JG": 60, "MID": 40, "ADC": 30, "SUP": 50 }
+  },
+  {
+    "name": "Player7",
+    "power": { "TOP": 30, "JG": 75, "MID": 60, "ADC": 50, "SUP": 40 }
+  },
+  {
+    "name": "Player8",
+    "power": { "TOP": 50, "JG": 40, "MID": 80, "ADC": 30, "SUP": 60 }
+  },
+  {
+    "name": "Player9",
+    "power": { "TOP": 60, "JG": 50, "MID": 30, "ADC": 75, "SUP": 40 }
+  },
+  {
+    "name": "Player10",
+    "power": { "TOP": 40, "JG": 30, "MID": 50, "ADC": 60, "SUP": 85 }
+  }
+]

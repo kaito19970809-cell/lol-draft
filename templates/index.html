@@ -2,78 +2,28 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>LoL Draft Tool</title>
+<title>LoL Draft</title>
 
 <style>
-body {
-    margin: 0;
-    background: #050b1a;
-    color: white;
-    font-family: Arial;
-}
+body { margin:0; background:#050b1a; color:white; font-family:Arial; }
+.container { display:flex; height:100vh; }
 
-/* レイアウト */
-.container {
-    display: flex;
-    height: 100vh;
-}
+.team { width:25%; padding:10px; }
+.blue { background:#0a1a3f; }
+.red { background:#3f0a0a; }
 
-/* チーム */
-.team {
-    width: 25%;
-    padding: 10px;
-}
+.center { width:50%; text-align:center; }
 
-.blue {
-    background: linear-gradient(#0a1a3f, #000);
-}
-
-.red {
-    background: linear-gradient(#3f0a0a, #000);
-}
-
-/* 中央 */
-.center {
-    width: 50%;
-    text-align: center;
-    padding: 10px;
-}
-
-/* チャンプ */
 .champ img {
-    width: 60px;
-    margin: 5px;
-    border-radius: 8px;
-    transition: 0.2s;
+    width:60px; margin:5px;
+    border-radius:8px; cursor:pointer;
 }
+.champ:hover img { transform:scale(1.2); border:2px solid gold; }
 
-.champ:hover img {
-    transform: scale(1.2);
-    border: 2px solid gold;
-}
+#timer { font-size:40px; }
+.danger { color:red; }
 
-/* ピック表示 */
-.team img {
-    width: 60px;
-    margin: 5px;
-}
-
-/* BAN */
-.ban {
-    opacity: 0.3;
-    filter: grayscale(100%);
-}
-
-/* タイマー */
-#timer {
-    font-size: 40px;
-    font-weight: bold;
-}
-
-.danger {
-    color: red;
-    text-shadow: 0 0 10px red;
-}
+.team img { width:60px; margin:5px; }
 </style>
 </head>
 
@@ -81,30 +31,18 @@ body {
 
 <div class="container">
 
-<!-- 🔵 BLUE -->
 <div class="team blue">
-    <h2>BLUE</h2>
-    <div id="bluePicks"></div>
-</div>
-
-<!-- 🎯 CENTER -->
-<div class="center">
-
-<h1>LoL Draft</h1>
-
-<!-- BAN表示 -->
-<div style="display:flex; justify-content:space-between;">
-<div>
-<h3>BLUE BAN</h3>
+<h2>BLUE</h2>
+{% for p in teamA %}
+<p>{{p.player.name}} ({{p.role}})</p>
+{% endfor %}
+<div id="bluePicks"></div>
 <div id="blueBan"></div>
 </div>
 
-<div>
-<h3>RED BAN</h3>
-<div id="redBan"></div>
-</div>
-</div>
+<div class="center">
 
+<h1>LoL Draft</h1>
 <h2 id="phase"></h2>
 <h3 id="current"></h3>
 <h2 id="timer">30</h2>
@@ -112,194 +50,80 @@ body {
 <ul id="log"></ul>
 
 <div id="champions">
-{% for champ in champions %}
+{% for c in champions %}
 <div class="champ" onclick="selectChamp(this)">
-<img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/{{ champ }}.png" alt="{{ champ }}">
+<img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/{{c}}.png" alt="{{c}}">
 </div>
 {% endfor %}
 </div>
 
 </div>
 
-<!-- 🔴 RED -->
 <div class="team red">
-    <h2>RED</h2>
-    <div id="redPicks"></div>
+<h2>RED</h2>
+{% for p in teamB %}
+<p>{{p.player.name}} ({{p.role}})</p>
+{% endfor %}
+<div id="redPicks"></div>
+<div id="redBan"></div>
 </div>
 
 </div>
 
-<!-- 音 -->
-<audio id="pickSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
+<audio id="sound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
 
 <script>
-/* ===== チーム ===== */
-const teams = {
-    blue: [
-        {% for p in teamA %}
-        "{{ p.player.name }}",
-        {% endfor %}
-    ],
-    red: [
-        {% for p in teamB %}
-        "{{ p.player.name }}",
-        {% endfor %}
-    ]
-};
-
-/* ===== 順番 ===== */
 const sequence = [
-    "blue-ban","red-ban","blue-ban","red-ban",
-    "blue-pick","red-pick","red-pick","blue-pick","blue-pick",
-    "red-pick","red-pick","blue-pick"
+"blue-ban","red-ban","blue-ban","red-ban",
+"blue-pick","red-pick","red-pick","blue-pick",
+"blue-pick","red-pick","red-pick","blue-pick"
 ];
 
-let turn = 0;
-let timeLeft = 30;
-let timer = null;
+let turn=0, timer=null, timeLeft=30;
 
-/* ===== データ ===== */
-let playerPicks = {};
-Object.values(teams).flat().forEach(p => playerPicks[p] = []);
+function getStep(){return sequence[turn];}
+function getTeam(){return getStep().split("-")[0];}
+function isBan(){return getStep().includes("ban");}
 
-/* ===== 状態 ===== */
-function getStep() { return sequence[turn]; }
-function getTeam() { return getStep().split("-")[0]; }
-function isBan() { return getStep().includes("ban"); }
-
-function getPlayer() {
-    const team = getTeam();
-    const count = sequence.slice(0, turn).filter(s => s === team+"-pick").length;
-    return teams[team][count];
+function update(){
+document.getElementById("phase").textContent=isBan()?"BAN":"PICK";
+document.getElementById("current").textContent=getTeam().toUpperCase();
+startTimer();
 }
 
-/* ===== 表示 ===== */
-function update() {
-    document.getElementById("phase").textContent =
-        isBan() ? "BANフェーズ" : "PICKフェーズ";
-
-    document.getElementById("current").textContent =
-        getTeam().toUpperCase() + (isBan() ? " BAN" : " PICK");
-
-    startTimer();
+function startTimer(){
+clearInterval(timer);
+timeLeft=30;
+timer=setInterval(()=>{
+timeLeft--;
+let el=document.getElementById("timer");
+el.textContent=timeLeft;
+if(timeLeft<=5) el.classList.add("danger");
+if(timeLeft<=0){clearInterval(timer);turn++;update();}
+},1000);
 }
 
-/* ===== タイマー ===== */
-function startTimer() {
-    clearInterval(timer);
-    timeLeft = 30;
+function selectChamp(el){
+clearInterval(timer);
+document.getElementById("sound").play();
 
-    const el = document.getElementById("timer");
-    el.textContent = timeLeft;
+let champ=el.querySelector("img").alt;
+let team=getTeam();
 
-    timer = setInterval(() => {
-        timeLeft--;
-        el.textContent = timeLeft;
+let img=document.createElement("img");
+img.src=el.querySelector("img").src;
 
-        if (timeLeft <= 5) {
-            el.classList.add("danger");
-        } else {
-            el.classList.remove("danger");
-        }
-
-        if (timeLeft <= 0) {
-            clearInterval(timer);
-            autoSkip();
-        }
-    }, 1000);
+if(isBan()){
+document.getElementById(team+"Ban").appendChild(img);
+el.style.opacity=0.3;
+}else{
+document.getElementById(team+"Picks").appendChild(img);
+el.remove();
 }
 
-/* ===== スキップ ===== */
-function autoSkip() {
-    const li = document.createElement("li");
-    li.textContent = getTeam().toUpperCase() + " 時間切れ";
-    document.getElementById("log").appendChild(li);
-
-    turn++;
-
-    if (turn < sequence.length) {
-        update();
-    } else {
-        finish();
-    }
-}
-
-/* ===== クリック ===== */
-function selectChamp(el) {
-    clearInterval(timer);
-
-    document.getElementById("pickSound").play();
-
-    const champ = el.querySelector("img").alt;
-    const team = getTeam();
-
-    const li = document.createElement("li");
-
-    if (isBan()) {
-        li.textContent = team.toUpperCase() + " BAN → " + champ;
-
-        const img = document.createElement("img");
-        img.src = el.querySelector("img").src;
-        img.style.width = "50px";
-
-        if (team === "blue") {
-            document.getElementById("blueBan").appendChild(img);
-        } else {
-            document.getElementById("redBan").appendChild(img);
-        }
-
-        el.classList.add("ban");
-    } else {
-        const player = getPlayer();
-        playerPicks[player].push(champ);
-
-        li.textContent = team.toUpperCase() + " PICK → " + champ;
-
-        const img = document.createElement("img");
-        img.src = el.querySelector("img").src;
-
-        if (team === "blue") {
-            document.getElementById("bluePicks").appendChild(img);
-        } else {
-            document.getElementById("redPicks").appendChild(img);
-        }
-
-        el.remove();
-    }
-
-    document.getElementById("log").appendChild(li);
-
-    turn++;
-
-    if (turn < sequence.length) {
-        update();
-    } else {
-        finish();
-    }
-}
-
-/* ===== 終了 ===== */
-function finish() {
-    document.getElementById("current").textContent = "終了";
-
-    const res = document.createElement("div");
-    res.innerHTML = "<h2>結果</h2>";
-
-    for (const p in playerPicks) {
-        const div = document.createElement("div");
-        div.innerHTML = "<h3>" + p + "</h3>";
-
-        playerPicks[p].forEach(c => {
-            const img = document.createElement("img");
-            img.src = `https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${c}.png`;
-            img.style.width = "50px";
-            div.appendChild(img);
-        });
-
-        res.appendChild(div);
-    }
-
-    document.body.appendChild(res);
+turn++;
+if(turn<sequence.length) update();
+else alert("ドラフト終了");
 }
 
 update();
