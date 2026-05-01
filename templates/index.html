@@ -6,158 +6,244 @@
 
 <style>
 body {
-    margin:0;
-    background: radial-gradient(circle at top, #0a1a3f, #050b1a);
-    color:white;
-    font-family:Arial;
+    margin: 0;
+    background: #0a1428;
+    color: white;
+    font-family: Arial;
 }
-.container {display:flex;height:100vh;}
-.team {width:20%;text-align:center;padding:10px;}
-.blue {background:#0a1a3f;}
-.red {background:#3f0a0a;}
-.center {width:60%;text-align:center;}
+
+/* レイアウト */
+.main {
+    display: flex;
+    height: 100vh;
+}
+
+/* サイド */
+.side {
+    width: 20%;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.blue {
+    background: linear-gradient(#0a1a3f, #050b1a);
+    border-right: 3px solid #00c8ff;
+}
+
+.red {
+    background: linear-gradient(#3f0a0a, #1a0505);
+    border-left: 3px solid #ff3c3c;
+}
+
+/* 中央 */
+.center {
+    width: 60%;
+    text-align: center;
+    position: relative;
+}
+
+/* タイトル */
+h1 {
+    color: gold;
+    margin: 10px;
+}
+
+/* タイマー */
+#timer {
+    font-size: 50px;
+    margin: 10px;
+    transition: 0.3s;
+}
+
+.low {
+    color: red;
+    animation: blink 0.5s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.3; }
+}
+
+/* チャンピオン */
+#champions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 10px;
+}
 
 .champ img {
-    width:70px;margin:5px;border-radius:10px;
-    border:2px solid #222;cursor:pointer;
+    width: 60px;
+    margin: 4px;
+    border-radius: 8px;
+    border: 2px solid #333;
+    cursor: pointer;
+    transition: 0.2s;
 }
-.champ:hover img {
-    transform:scale(1.2);
-    border-color:gold;
+
+.champ img:hover {
+    transform: scale(1.15);
+    border-color: gold;
+    box-shadow: 0 0 10px gold;
 }
 
-#timer {font-size:40px;}
+/* BAN */
+.ban img {
+    width: 40px;
+    opacity: 0.4;
+    margin: 3px;
+}
 
-.active {box-shadow:0 0 20px cyan;}
-.red.active {box-shadow:0 0 20px red;}
+/* PICK */
+.pick img {
+    width: 70px;
+    margin: 5px;
+}
 
-button {
-    background:gold;border:none;padding:10px;
-    margin:5px;cursor:pointer;
+/* 見出し */
+.team-title {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+/* ターン表示 */
+#turnText {
+    font-size: 20px;
+    margin-top: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="main">
 
-<div class="team blue" id="blueTeam">
-<h2>BLUE</h2>
-<div id="blueBan"></div>
-<div id="bluePicks"></div>
+<!-- BLUE -->
+<div class="side blue">
+    <div class="team-title">BLUE</div>
+
+    <div>Ban</div>
+    <div id="blue-ban" class="ban"></div>
+
+    <hr>
+
+    <div>Pick</div>
+    <div id="blue-pick" class="pick"></div>
 </div>
 
+<!-- CENTER -->
 <div class="center">
 
-<h1>LoL Draft</h1>
-<h2 id="phase"></h2>
-<h3 id="current"></h3>
-<div id="timer">30</div>
+    <h1>LoL Draft</h1>
 
-<button onclick="undo()">UNDO</button>
-<button id="confirmBtn" style="display:none;" onclick="confirmPick()">確定</button>
+    <div id="phase">BAN PHASE</div>
+    <div id="turnText">BLUE TURN</div>
 
-<div id="champions">
-{% for champ in champions %}
-<div class="champ" onclick="selectChamp(this)">
-<img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/{{ champ }}.png" alt="{{ champ }}">
-</div>
-{% endfor %}
-</div>
+    <div id="timer">30</div>
 
-</div>
-
-<div class="team red" id="redTeam">
-<h2>RED</h2>
-<div id="redBan"></div>
-<div id="redPicks"></div>
-</div>
+    <div id="champions">
+        {% for champ in champions %}
+        <div class="champ" onclick="pick(this)">
+            <img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/{{ champ }}.png" alt="{{ champ }}">
+        </div>
+        {% endfor %}
+    </div>
 
 </div>
 
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<!-- RED -->
+<div class="side red">
+    <div class="team-title">RED</div>
+
+    <div>Ban</div>
+    <div id="red-ban" class="ban"></div>
+
+    <hr>
+
+    <div>Pick</div>
+    <div id="red-pick" class="pick"></div>
+</div>
+
+</div>
 
 <script>
-const socket = io();
-const ROOM_ID = "{{ room_id }}";
-const KEY = new URLSearchParams(location.search).get("key");
-const canControl = !!KEY;
+// 🔊 ピック音
+const pickSound = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
 
-socket.emit("join",{room:ROOM_ID});
+// フェーズ
+let phase = "ban";
 
-let selectedChamp = null;
-let timeLeft = 30;
+// ターン順（BAN→PICK）
+const order = [
+    "blue","red","red","blue","blue","red",
+    "blue","red","red","blue","blue","red"
+];
 
-socket.on("update",(state)=>{
-    render(state);
-});
+let turn = 0;
+let time = 30;
+let timer;
 
-function render(state){
-    document.getElementById("phase").textContent =
-        state.sequence[state.turn]?.includes("ban") ? "BAN" : "PICK";
+// タイマー開始
+function startTimer() {
+    clearInterval(timer);
+    time = 30;
 
-    document.getElementById("current").textContent =
-        state.sequence[state.turn]?.split("-")[0];
+    timer = setInterval(() => {
+        time--;
+        const t = document.getElementById("timer");
+        t.textContent = time;
 
-    highlight(state);
-    draw(state);
+        if (time <= 5) {
+            t.classList.add("low");
+        } else {
+            t.classList.remove("low");
+        }
+
+        if (time <= 0) {
+            clearInterval(timer);
+        }
+    }, 1000);
 }
 
-function draw(state){
-    updateList("bluePicks",state.bluePicks);
-    updateList("redPicks",state.redPicks);
-    updateList("blueBan",state.blueBan);
-    updateList("redBan",state.redBan);
-}
+// 初期
+startTimer();
 
-function updateList(id,list){
-    const el=document.getElementById(id);
-    el.innerHTML="";
-    list.forEach(c=>{
-        const img=document.createElement("img");
-        img.src=`https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${c}.png`;
-        el.appendChild(img);
-    });
-}
+function pick(el) {
+    const champ = el.querySelector("img").alt;
+    const team = order[turn];
 
-function highlight(state){
-    const team=state.sequence[state.turn]?.split("-")[0];
-    document.getElementById("blueTeam").classList.remove("active");
-    document.getElementById("redTeam").classList.remove("active");
+    pickSound.play();
 
-    if(team==="blue"){
-        document.getElementById("blueTeam").classList.add("active");
-    }else{
-        document.getElementById("redTeam").classList.add("active");
+    if (phase === "ban") {
+        document.getElementById(team + "-ban")
+            .innerHTML += `<img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${champ}.png">`;
+    } else {
+        document.getElementById(team + "-pick")
+            .innerHTML += `<img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${champ}.png">`;
     }
+
+    el.remove();
+    turn++;
+
+    // BAN→PICK切替
+    if (turn === 6) {
+        phase = "pick";
+        document.getElementById("phase").textContent = "PICK PHASE";
+    }
+
+    updateTurn();
+    startTimer();
 }
 
-function selectChamp(el){
-    if(!canControl)return;
+function updateTurn() {
+    if (turn >= order.length) {
+        document.getElementById("turnText").textContent = "FINISH";
+        return;
+    }
 
-    selectedChamp=el.querySelector("img").alt;
-
-    document.getElementById("confirmBtn").style.display="inline-block";
-}
-
-function confirmPick(){
-    if(!selectedChamp)return;
-
-    if(!confirm(selectedChamp+"でOK？"))return;
-
-    socket.emit("action",{
-        room:ROOM_ID,
-        champ:selectedChamp,
-        key:KEY
-    });
-
-    selectedChamp=null;
-    document.getElementById("confirmBtn").style.display="none";
-}
-
-function undo(){
-    socket.emit("undo",{room:ROOM_ID,key:KEY});
+    document.getElementById("turnText").textContent =
+        order[turn].toUpperCase() + " TURN";
 }
 </script>
 
