@@ -8,11 +8,26 @@ import json, random, time
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+print("=== APP START ===")
+
+# -----------------------
+# データ
+# -----------------------
 with open("champions.json", encoding="utf-8") as f:
     champions = json.load(f)
 
-PACK_SIZE = 10
-TOTAL_ROUNDS = 3
+print("Loaded:", len(champions))
+
+used_global = set()
+
+def create_pack():
+    pack = []
+    while len(pack) < 10:
+        c = random.choice(champions)
+        if c["name"] not in used_global:
+            used_global.add(c["name"])
+            pack.append(c)
+    return pack
 
 orders = [
  ["blue","red","red","blue","blue","red","red","blue","blue","red"],
@@ -20,39 +35,16 @@ orders = [
  ["blue","red","red","blue","blue","red","red","blue","blue","red"]
 ]
 
-state = {}
-used = set()
-
-def reset_state():
-    global state, used
-    used = set()
-    state = {
-        "started": False,
-        "ready": {"blue": False, "red": False},  # ★追加
-        "round": 1,
-        "turn": 0,
-        "pack": [],
-        "picks": {"blue": [], "red": []},
-        "time": 30,
-        "last": time.time()
-    }
-
-reset_state()
-
-def create_pack():
-    global used
-    pool = [c for c in champions if c["name"] not in used]
-
-    if len(pool) < PACK_SIZE:
-        used = set()
-        pool = champions.copy()
-
-    pack = random.sample(pool, PACK_SIZE)
-
-    for c in pack:
-        used.add(c["name"])
-
-    return pack
+state = {
+    "round": 1,
+    "turn": 0,
+    "pack": [],
+    "picks": {"blue":[], "red":[]},
+    "time": 30,
+    "last": time.time(),
+    "started": False,
+    "ready": {"blue":False, "red":False}
+}
 
 def start_round():
     state["pack"] = create_pack()
@@ -60,7 +52,9 @@ def start_round():
     state["time"] = 30
     state["last"] = time.time()
 
-# ---------- routes ----------
+# -----------------------
+# ルート
+# -----------------------
 @app.route("/")
 def home():
     return "OK"
@@ -73,72 +67,85 @@ def blue():
 def red():
     return render_template("index.html", role="red")
 
-# ---------- socket ----------
+# -----------------------
+# 接続
+# -----------------------
 @socketio.on("connect")
 def connect():
     emit("state", state)
 
+# -----------------------
+# スタート
+# -----------------------
 @socketio.on("start")
 def start(data):
     role = data["role"]
-
     state["ready"][role] = True
 
-    # 両方押したら開始
     if state["ready"]["blue"] and state["ready"]["red"]:
         state["started"] = True
         state["round"] = 1
-        state["picks"] = {"blue": [], "red": []}
+        state["picks"] = {"blue":[], "red":[]}
+        used_global.clear()
         start_round()
 
-    emit("state", state, broadcast=True)
+    socketio.emit("state", state)
 
-@socketio.on("reset")
-def reset():
-    reset_state()
-    emit("state", state, broadcast=True)
-
+# -----------------------
+# ピック
+# -----------------------
 @socketio.on("pick")
 def pick(data):
-    role = data["role"]
-    name = data["champ"]
-
     if not state["started"]:
         return
 
+    role = data["role"]
+    champ = data["champ"]
+
     order = orders[state["round"]-1]
-
-    # ★ 修正：>= を消す
-    if state["turn"] >= len(order):
-        return
-
     current = order[state["turn"]]
 
     if role != current:
         return
 
-    champ = next((c for c in state["pack"] if c["name"] == name), None)
-    if not champ:
+    target = next((c for c in state["pack"] if c["name"] == champ), None)
+    if not target:
         return
 
-    state["pack"].remove(champ)
-    state["picks"][role].append(champ)
+    state["pack"].remove(target)
+    state["picks"][role].append(target)
 
     state["turn"] += 1
     state["time"] = 30
     state["last"] = time.time()
 
-    # ★ パックが空で判定（これが重要）
-    if len(state["pack"]) == 0:
-        if state["round"] < TOTAL_ROUNDS:
+    # パック終了
+    if state["turn"] >= 10:
+        if state["round"] < 3:
             state["round"] += 1
             start_round()
         else:
             state["started"] = False
 
-    emit("state", state, broadcast=True)
+    socketio.emit("state", state)
 
-# ---------- タイマー ----------
+# -----------------------
+# リセット
+# -----------------------
+@socketio.on("reset")
+def reset():
+    used_global.clear()
+    state["round"] = 1
+    state["turn"] = 0
+    state["pack"] = []
+    state["picks"] = {"blue":[], "red":[]}
+    state["started"] = False
+    state["ready"] = {"blue":False, "red":False}
+    socketio.emit("state", state)
+
+# -----------------------
+# タイマー
+# -----------------------
 def timer():
     while True:
         socketio.sleep(1)
@@ -148,17 +155,14 @@ def timer():
 
         remain = 30 - int(time.time() - state["last"])
 
-        if remain <= 0:
-            state["turn"] += 1
-            state["last"] = time.time()
-            state["time"] = 30
-        else:
-            state["time"] = remain
+        if remain != state["time"]:
+            state["time"] = max(remain,0)
 
-        # ★ 必ず毎秒送る
-        socketio.emit("state", state)
+            if state["time"] <= 0:
+                state["turn"] += 1
+                state["last"] = time.time()
+                state["time"] = 30
+
+            socketio.emit("state", state)
 
 socketio.start_background_task(timer)
-
-if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=10000)
