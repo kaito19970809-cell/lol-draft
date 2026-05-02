@@ -2,101 +2,68 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>LoL Draft</title>
+<title>LoLドラフト</title>
 
 <style>
 body {
-    background: #0a0f1a;
-    color: white;
-    font-family: sans-serif;
-    text-align: center;
+    background:#0a0f1a;
+    color:white;
+    text-align:center;
 }
 
-/* PACK */
-#pack {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-}
-
-/* カード */
 .card {
-    width: 100px;
-    height: 140px;
-    background: #111;
-    border: 2px solid #333;
-    border-radius: 10px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: 0.2s;
-    position: relative;
+    width:100px;
+    height:140px;
+    border-radius:10px;
+    overflow:hidden;
+    border:2px solid #333;
+    cursor:pointer;
+    transition:0.2s;
 }
 
-/* 画像 */
-.card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* ホバー */
 .card:hover {
-    transform: scale(1.15);
-    border-color: gold;
-    z-index: 10;
+    transform:scale(1.1);
+    border-color:gold;
 }
 
-/* 名前 */
-.card-name {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    background: rgba(0,0,0,0.7);
-    font-size: 12px;
+.disabled {
+    pointer-events:none;
+    opacity:0.4;
 }
 
-/* ピック済み */
-.picked {
-    filter: grayscale(100%);
-    opacity: 0.4;
-    pointer-events: none;
-}
+.blue-turn {color:#4da6ff;}
+.red-turn {color:#ff4d4d;}
 
-/* アニメーション */
-.fade-in {
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from {opacity:0; transform:scale(0.8);}
-    to {opacity:1; transform:scale(1);}
-}
-
-.timer {
-    font-size: 30px;
-    color: gold;
+.active {
+    background:yellow;
+    color:black;
+    padding:2px 6px;
+    border-radius:5px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>LoL Draft</h1>
+<h1>LoLドラフト</h1>
 
-<div>ROLE: {{ role }}</div>
-<div>ROUND: <span id="round"></span></div>
-<div>TURN: <span id="turn"></span></div>
-<div class="timer" id="timer"></div>
+<h2 id="turnText"></h2>
+<div>ラウンド: <span id="round"></span></div>
+<div>残り時間: <span id="timer"></span></div>
 
-<h2>PACK</h2>
-<div id="pack"></div>
+<div id="orders"></div>
 
-<h2>P1</h2>
-<div id="p1"></div>
+<h2>パック</h2>
+<div id="pack" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;"></div>
 
-<h2>P2</h2>
-<div id="p2"></div>
+<h2>ブルー</h2>
+<div id="blue"></div>
+
+<h2>レッド</h2>
+<div id="red"></div>
+
+<br>
+<button onclick="reset()">リセット</button>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
@@ -104,62 +71,90 @@ body {
 const socket = io();
 const ROLE = "{{ role }}";
 
-// 🔥 画像URL生成
-function imgUrl(name) {
-    return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${name}.png`;
+const orders = [
+ ["blue","red","red","blue","blue","red","red","blue","blue","red"],
+ ["red","blue","blue","red","red","blue","blue","red","red","blue"],
+ ["blue","red","blue","red","blue","red","blue","red","blue","red"]
+];
+
+function imgUrl(name){
+ return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${name}.png`;
 }
 
-// 🔥 ピック送信
-function pick(champ) {
-    socket.emit("pick", {
-        role: ROLE,
-        champ: champ
-    });
+function pick(champ, current){
+ if(ROLE !== current){
+     alert("あなたのターンではありません");
+     return;
+ }
+
+ if(!confirm(champ + " をピックしますか？")){
+     return;
+ }
+
+ socket.emit("pick",{role:ROLE, champ:champ});
 }
 
-// 🔥 カード生成
-function createCard(champ, pickedList) {
-    const div = document.createElement("div");
-    div.className = "card fade-in";
-
-    if (pickedList.includes(champ)) {
-        div.classList.add("picked");
-    }
-
-    div.innerHTML = `
-        <img src="${imgUrl(champ)}">
-        <div class="card-name">${champ}</div>
-    `;
-
-    div.onclick = () => pick(champ);
-
-    return div;
+function reset(){
+ fetch("/reset");
 }
 
-// 🔥 描画
-function render(state) {
-    document.getElementById("round").innerText = state.round;
-    document.getElementById("turn").innerText = state.turn;
-    document.getElementById("timer").innerText = state.time;
+function renderOrders(round, turn){
+ const div = document.getElementById("orders");
+ div.innerHTML = "";
 
-    const packDiv = document.getElementById("pack");
-    packDiv.innerHTML = "";
+ orders.forEach((ord, r)=>{
+     let html = `<div>第${r+1}パック：`;
 
-    const pickedAll = [...state.picks.P1, ...state.picks.P2];
+     ord.forEach((p,i)=>{
+         let cls = "";
+         if(r === round-1 && i === turn){
+             cls = "active";
+         }
 
-    state.pack.forEach(champ => {
-        const card = createCard(champ, pickedAll);
-        packDiv.appendChild(card);
-    });
+         html += `<span class="${cls}">${p==="blue"?"青":"赤"}</span> `;
+     });
 
-    document.getElementById("p1").innerText = state.picks.P1.join(", ");
-    document.getElementById("p2").innerText = state.picks.P2.join(", ");
+     html += "</div>";
+     div.innerHTML += html;
+ });
 }
 
-// 🔥 状態受信
-socket.on("state", (state) => {
-    render(state);
-});
+function render(state){
+
+ document.getElementById("round").innerText = state.round;
+ document.getElementById("timer").innerText = state.time;
+
+ const current = orders[state.round-1][state.turn];
+
+ const turnText = document.getElementById("turnText");
+ turnText.innerText = current === "blue" ? "ブルーのターン" : "レッドのターン";
+ turnText.className = current === "blue" ? "blue-turn" : "red-turn";
+
+ renderOrders(state.round, state.turn);
+
+ const packDiv = document.getElementById("pack");
+ packDiv.innerHTML = "";
+
+ state.pack.forEach(champ=>{
+     const div = document.createElement("div");
+     div.className = "card";
+
+     if(ROLE !== current){
+         div.classList.add("disabled");
+     }
+
+     div.innerHTML = `<img src="${imgUrl(champ)}" width="100%" height="100%">`;
+
+     div.onclick = ()=>pick(champ, current);
+
+     packDiv.appendChild(div);
+ });
+
+ document.getElementById("blue").innerText = state.picks.blue.join(", ");
+ document.getElementById("red").innerText = state.picks.red.join(", ");
+}
+
+socket.on("state", render);
 </script>
 
 </body>
