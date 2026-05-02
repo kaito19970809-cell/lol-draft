@@ -1,15 +1,15 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 import json, random, time
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # ---------- データ ----------
 with open("champions.json", encoding="utf-8") as f:
     champions = json.load(f)
 
-# ---------- ティア重み ----------
+# ---------- ティア ----------
 TIER_WEIGHT = {"S":0.7,"A":1.0,"B":1.2,"C":1.5}
 
 def weighted_choice(cands):
@@ -23,11 +23,9 @@ def weighted_choice(cands):
             return c
     return random.choice(cands)
 
-# ---------- パック生成 ----------
 def create_pack():
     result = []
     used = set()
-
     tier_need = {"S":2,"A":3,"B":4,"C":1}
 
     for t,n in tier_need.items():
@@ -40,7 +38,7 @@ def create_pack():
 
     return result
 
-# ---------- ピック順 ----------
+# ---------- 順番 ----------
 orders = [
     ["P1","P2","P2","P1","P1","P2","P2","P1","P1","P2"],
     ["P2","P1","P1","P2","P2","P1","P1","P2","P2","P1"],
@@ -67,18 +65,28 @@ def start_round():
     state["time"] = 30
     state["last"] = time.time()
 
+# ---------- 🔐 権限URL ----------
+def get_role():
+    key = request.args.get("key")
+
+    if key == "blue123":
+        return "blue"
+    elif key == "red123":
+        return "red"
+    else:
+        return "spec"
+
 # ---------- ルート ----------
+@app.route("/")
+def home():
+    return "LoL Draft Running"
+
 @app.route("/blue")
-def blue():
-    return render_template("index.html", role="blue")
-
 @app.route("/red")
-def red():
-    return render_template("index.html", role="red")
-
 @app.route("/spec")
-def spec():
-    return render_template("index.html", role="spec")
+def index():
+    role = get_role()
+    return render_template("index.html", role=role)
 
 # ---------- 接続 ----------
 @socketio.on("connect")
@@ -113,12 +121,9 @@ def pick(data):
     state["packs"][other].append(champ)
 
     state["turn"] += 1
-
-    # タイマーリセット
     state["time"] = 30
     state["last"] = time.time()
 
-    # パック終了
     if state["turn"] >= 10:
         if state["round"] < 3:
             state["round"] += 1
