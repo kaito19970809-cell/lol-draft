@@ -2,56 +2,15 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>LoLドラフト</title>
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
 <style>
-body{
- background:#0a1428;
- color:white;
- text-align:center;
- font-family:sans-serif;
-}
-
-.pack{
- display:flex;
- justify-content:center;
- gap:10px;
- margin:20px;
- flex-wrap:wrap;
-}
-
-.card{
- width:90px;
- height:110px;
- position:relative;
- cursor:pointer;
- transition:0.2s;
-}
-
-.card:hover{
- transform:scale(1.1);
-}
-
-.card img{
- width:100%;
- height:100%;
- border-radius:8px;
-}
-
-.lock{
- position:absolute;
- top:0;
- left:0;
- width:100%;
- height:100%;
- background:rgba(0,0,0,0.6);
-}
-
-.pick-area img{
- width:50px;
- margin:2px;
-}
+body{background:#0a1428;color:white;text-align:center}
+.pack{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.card{width:90px;height:110px;cursor:pointer;position:relative}
+.card img{width:100%;border-radius:8px}
+.lock{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.6)}
+.selected{outline:3px solid yellow}
 </style>
 </head>
 
@@ -63,28 +22,31 @@ body{
 <div>ラウンド: <span id="round"></span></div>
 <div>残り時間: <span id="time"></span></div>
 
-<button onclick="startGame()">スタート</button>
+<button onclick="start()">スタート</button>
+<button onclick="reset()">リセット</button>
 
-<div class="pack" id="pack"></div>
+<h3 id="order"></h3>
+
+<div id="pack" class="pack"></div>
 
 <h3>ブルー</h3>
-<div id="blue" class="pick-area"></div>
+<div id="blue"></div>
 
 <h3>レッド</h3>
-<div id="red" class="pick-area"></div>
+<div id="red"></div>
 
 <script>
 const socket = io();
 const role = "{{ role }}";
 let state = {};
+let selected = null;
 
-function imgUrl(name){
+function img(name){
  return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${name}.png`;
 }
 
-function startGame(){
- socket.emit("start");
-}
+function start(){ socket.emit("start"); }
+function reset(){ socket.emit("reset"); }
 
 socket.on("state", s=>{
  state = s;
@@ -93,60 +55,69 @@ socket.on("state", s=>{
 
 function render(){
  if(!state.started){
-   document.getElementById("turn").innerText = "待機中";
+   turn.innerText = "待機中";
    return;
  }
 
  const order = [
-  ["blue","red","red","blue","blue","red","red","blue","blue","red"],
-  ["red","blue","blue","red","red","blue","blue","red","red","blue"],
-  ["blue","red","red","blue","blue","red","red","blue","blue","red"]
+  ["青","赤","赤","青","青","赤","赤","青","青","赤"],
+  ["赤","青","青","赤","赤","青","青","赤","赤","青"],
+  ["青","赤","赤","青","青","赤","赤","青","青","赤"]
  ][state.round-1];
 
+ document.getElementById("order").innerText =
+  "順番: " + order.join(" → ");
+
  const current = order[state.turn];
+ turn.innerText = current + "のターン";
 
- document.getElementById("turn").innerText =
-  current==="blue" ? "ブルーのターン" : "レッドのターン";
+ round.innerText = state.round;
+ time.innerText = state.time;
 
- document.getElementById("round").innerText = state.round;
- document.getElementById("time").innerText = state.time;
-
- // パック
  const pack = document.getElementById("pack");
  pack.innerHTML = "";
 
- state.pack.forEach(champ=>{
+ state.pack.forEach(c=>{
   const div = document.createElement("div");
   div.className = "card";
 
-  const clickable = role === current;
+  if(selected === c.name){
+    div.classList.add("selected");
+  }
+
+  const clickable =
+    (role==="blue" && current==="青") ||
+    (role==="red" && current==="赤");
 
   div.innerHTML = `
-   <img src="${imgUrl(champ.name)}"
-    onerror="this.src='https://via.placeholder.com/90x110'">
+   <img src="${img(c.name)}"
+   onerror="this.src='https://via.placeholder.com/90x110'">
    ${!clickable ? '<div class="lock"></div>' : ''}
   `;
 
   if(clickable){
-   div.onclick = ()=>pick(champ.name);
+    div.onclick = ()=>{
+      if(selected === c.name){
+        socket.emit("pick",{role:role, champ:c.name});
+        selected = null;
+      }else{
+        selected = c.name;
+      }
+    }
   }
 
   pack.appendChild(div);
  });
 
- // ピック表示
+ // picks
  ["blue","red"].forEach(team=>{
   const el = document.getElementById(team);
   el.innerHTML = "";
-
   state.picks[team].forEach(c=>{
-   el.innerHTML += `<img src="${imgUrl(c.name)}">`;
+    el.innerHTML += `<img src="${img(c.name)}" width="50"
+    onerror="this.src='https://via.placeholder.com/50'">`;
   });
  });
-}
-
-function pick(name){
- socket.emit("pick", {role: role, champ: name});
 }
 </script>
 
