@@ -1,19 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>LoLドラフト</title>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+<style>
+body{background:#0a1428;color:white;text-align:center}
+.pack{display:flex;justify-content:center;gap:10px}
+.card{width:80px;height:100px;cursor:pointer;position:relative}
+.card img{width:100%;border-radius:8px}
+.lock{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.6)}
+</style>
+</head>
+
+<body>
+
+<h1>LoLドラフト</h1>
+<h2 id="turn"></h2>
+<div>ラウンド: <span id="round"></span></div>
+<div>残り時間: <span id="time"></span></div>
+
+<button onclick="start()">スタート</button>
+<button onclick="reset()">リセット</button>
+
+<div class="pack" id="pack"></div>
+
+<h3>ブルー</h3>
+<div id="blue"></div>
+
+<h3>レッド</h3>
+<div id="red"></div>
+
 <script>
 const socket = io();
 const role = "{{ role }}";
 let state = {};
-let selected = null;
 
-function img(name){
- return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${name}.png`;
-}
-
-function start(){
- socket.emit("start", {role: role}); // ★ 修正
-}
-
-function reset(){
- socket.emit("reset");
+function img(c){
+ return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${c.image}`;
 }
 
 socket.on("state", s=>{
@@ -21,66 +46,67 @@ socket.on("state", s=>{
  render();
 });
 
+function start(){
+ socket.emit("start",{role:role});
+}
+
+function reset(){
+ socket.emit("reset");
+}
+
 function render(){
  if(!state.started){
-   turn.innerText =
-    "待機中 (青:" + (state.ready.blue?"OK":"待機") +
-    " 赤:" + (state.ready.red?"OK":"待機") + ")";
-   return;
+  document.getElementById("turn").innerText = "待機中";
+  return;
  }
 
- const order = [
-  ["青","赤","赤","青","青","赤","赤","青","青","赤"],
-  ["赤","青","青","赤","赤","青","青","赤","赤","青"],
-  ["青","赤","赤","青","青","赤","赤","青","青","赤"]
- ][state.round-1];
+ const orders = [
+  ["blue","red","red","blue","blue","red","red","blue","blue","red"],
+  ["red","blue","blue","red","red","blue","blue","red","red","blue"],
+  ["blue","red","red","blue","blue","red","red","blue","blue","red"]
+ ];
 
- const current = order[state.turn];
+ const current = orders[state.round-1][state.turn];
 
- turn.innerText = current + "のターン";
- round.innerText = state.round;
- time.innerText = state.time;
+ document.getElementById("turn").innerText =
+  current==="blue"?"ブルーのターン":"レッドのターン";
 
- const clickable =
-   (role==="blue" && current==="青") ||
-   (role==="red" && current==="赤");
+ document.getElementById("round").innerText = state.round;
+ document.getElementById("time").innerText = state.time;
 
- pack.innerHTML = "";
+ const pack = document.getElementById("pack");
+ pack.innerHTML="";
+
+ if(!state.pack) return;
 
  state.pack.forEach(c=>{
   const div = document.createElement("div");
-  div.className = "card";
+  div.className="card";
+
+  const clickable = role===current;
 
   div.innerHTML = `
-   <img src="${img(c.name)}"
-   onerror="this.src='https://via.placeholder.com/90x110'">
+   <img src="${img(c)}"
+    onerror="this.src='https://via.placeholder.com/80x100'">
+   ${!clickable ? '<div class="lock"></div>' : ''}
   `;
 
-  if(!clickable){
-    div.style.opacity = 0.4; // ★ 黒影削除
-  }
-
   if(clickable){
-    div.onclick = ()=>{
-      if(selected === c.name){
-        socket.emit("pick",{role:role, champ:c.name});
-        selected = null;
-      }else{
-        selected = c.name;
-      }
-    }
+    div.onclick = ()=>socket.emit("pick",{role:role,champ:c.name});
   }
 
   pack.appendChild(div);
  });
 
- // picks
- ["blue","red"].forEach(team=>{
-  const el = document.getElementById(team);
-  el.innerHTML = "";
-  state.picks[team].forEach(c=>{
-    el.innerHTML += `<img src="${img(c.name)}" width="50">`;
+ ["blue","red"].forEach(t=>{
+  const el = document.getElementById(t);
+  el.innerHTML="";
+  state.picks[t].forEach(c=>{
+    el.innerHTML += `<img src="${img(c)}" width="50">`;
   });
  });
 }
 </script>
+
+</body>
+</html>
