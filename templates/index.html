@@ -3,42 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <title>LoLドラフト</title>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
 <style>
-body {
-    background:#0a0f1a;
-    color:white;
-    text-align:center;
+body{
+ background:#0a1428;
+ color:white;
+ text-align:center;
+ font-family:sans-serif;
 }
 
-.card {
-    width:100px;
-    height:140px;
-    border-radius:10px;
-    overflow:hidden;
-    border:2px solid #333;
-    cursor:pointer;
-    transition:0.2s;
+.pack{
+ display:flex;
+ justify-content:center;
+ gap:10px;
+ margin:20px;
+ flex-wrap:wrap;
 }
 
-.card:hover {
-    transform:scale(1.1);
-    border-color:gold;
+.card{
+ width:90px;
+ height:110px;
+ position:relative;
+ cursor:pointer;
+ transition:0.2s;
 }
 
-.disabled {
-    pointer-events:none;
-    opacity:0.4;
+.card:hover{
+ transform:scale(1.1);
 }
 
-.blue-turn {color:#4da6ff;}
-.red-turn {color:#ff4d4d;}
+.card img{
+ width:100%;
+ height:100%;
+ border-radius:8px;
+}
 
-.active {
-    background:yellow;
-    color:black;
-    padding:2px 6px;
-    border-radius:5px;
+.lock{
+ position:absolute;
+ top:0;
+ left:0;
+ width:100%;
+ height:100%;
+ background:rgba(0,0,0,0.6);
+}
+
+.pick-area img{
+ width:50px;
+ margin:2px;
 }
 </style>
 </head>
@@ -46,115 +58,96 @@ body {
 <body>
 
 <h1>LoLドラフト</h1>
+<h2 id="turn"></h2>
 
-<h2 id="turnText"></h2>
 <div>ラウンド: <span id="round"></span></div>
-<div>残り時間: <span id="timer"></span></div>
+<div>残り時間: <span id="time"></span></div>
 
-<div id="orders"></div>
+<button onclick="startGame()">スタート</button>
 
-<h2>パック</h2>
-<div id="pack" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;"></div>
+<div class="pack" id="pack"></div>
 
-<h2>ブルー</h2>
-<div id="blue"></div>
+<h3>ブルー</h3>
+<div id="blue" class="pick-area"></div>
 
-<h2>レッド</h2>
-<div id="red"></div>
-
-<br>
-<button onclick="reset()">リセット</button>
-
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<h3>レッド</h3>
+<div id="red" class="pick-area"></div>
 
 <script>
 const socket = io();
-const ROLE = "{{ role }}";
-
-const orders = [
- ["blue","red","red","blue","blue","red","red","blue","blue","red"],
- ["red","blue","blue","red","red","blue","blue","red","red","blue"],
- ["blue","red","blue","red","blue","red","blue","red","blue","red"]
-];
+const role = "{{ role }}";
+let state = {};
 
 function imgUrl(name){
  return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${name}.png`;
 }
 
-function pick(champ, current){
- if(ROLE !== current){
-     alert("あなたのターンではありません");
-     return;
+function startGame(){
+ socket.emit("start");
+}
+
+socket.on("state", s=>{
+ state = s;
+ render();
+});
+
+function render(){
+ if(!state.started){
+   document.getElementById("turn").innerText = "待機中";
+   return;
  }
 
- if(!confirm(champ + " をピックしますか？")){
-     return;
- }
+ const order = [
+  ["blue","red","red","blue","blue","red","red","blue","blue","red"],
+  ["red","blue","blue","red","red","blue","blue","red","red","blue"],
+  ["blue","red","red","blue","blue","red","red","blue","blue","red"]
+ ][state.round-1];
 
- socket.emit("pick",{role:ROLE, champ:champ});
-}
+ const current = order[state.turn];
 
-function reset(){
- fetch("/reset");
-}
-
-function renderOrders(round, turn){
- const div = document.getElementById("orders");
- div.innerHTML = "";
-
- orders.forEach((ord, r)=>{
-     let html = `<div>第${r+1}パック：`;
-
-     ord.forEach((p,i)=>{
-         let cls = "";
-         if(r === round-1 && i === turn){
-             cls = "active";
-         }
-
-         html += `<span class="${cls}">${p==="blue"?"青":"赤"}</span> `;
-     });
-
-     html += "</div>";
-     div.innerHTML += html;
- });
-}
-
-function render(state){
+ document.getElementById("turn").innerText =
+  current==="blue" ? "ブルーのターン" : "レッドのターン";
 
  document.getElementById("round").innerText = state.round;
- document.getElementById("timer").innerText = state.time;
+ document.getElementById("time").innerText = state.time;
 
- const current = orders[state.round-1][state.turn];
-
- const turnText = document.getElementById("turnText");
- turnText.innerText = current === "blue" ? "ブルーのターン" : "レッドのターン";
- turnText.className = current === "blue" ? "blue-turn" : "red-turn";
-
- renderOrders(state.round, state.turn);
-
- const packDiv = document.getElementById("pack");
- packDiv.innerHTML = "";
+ // パック
+ const pack = document.getElementById("pack");
+ pack.innerHTML = "";
 
  state.pack.forEach(champ=>{
-     const div = document.createElement("div");
-     div.className = "card";
+  const div = document.createElement("div");
+  div.className = "card";
 
-     if(ROLE !== current){
-         div.classList.add("disabled");
-     }
+  const clickable = role === current;
 
-     div.innerHTML = `<img src="${imgUrl(champ)}" width="100%" height="100%">`;
+  div.innerHTML = `
+   <img src="${imgUrl(champ.name)}"
+    onerror="this.src='https://via.placeholder.com/90x110'">
+   ${!clickable ? '<div class="lock"></div>' : ''}
+  `;
 
-     div.onclick = ()=>pick(champ, current);
+  if(clickable){
+   div.onclick = ()=>pick(champ.name);
+  }
 
-     packDiv.appendChild(div);
+  pack.appendChild(div);
  });
 
- document.getElementById("blue").innerText = state.picks.blue.join(", ");
- document.getElementById("red").innerText = state.picks.red.join(", ");
+ // ピック表示
+ ["blue","red"].forEach(team=>{
+  const el = document.getElementById(team);
+  el.innerHTML = "";
+
+  state.picks[team].forEach(c=>{
+   el.innerHTML += `<img src="${imgUrl(c.name)}">`;
+  });
+ });
 }
 
-socket.on("state", render);
+function pick(name){
+ socket.emit("pick", {role: role, champ: name});
+}
 </script>
 
 </body>
