@@ -14,8 +14,7 @@ with open("champions.json", encoding="utf-8") as f:
 
 TIER_WEIGHT = {"S":0.7,"A":1.0,"B":1.2,"C":1.5}
 
-# 🔥 全体で重複禁止
-used_global = set()
+used_global = set()  # ★全体重複防止
 
 def weighted_choice(cands):
     ws = [TIER_WEIGHT[c["tier"]] for c in cands]
@@ -30,125 +29,127 @@ def weighted_choice(cands):
 
 def create_pack():
     result = []
-    tier_need = {"S":2,"A":3,"B":4,"C":1}
 
-    for t,n in tier_need.items():
-        for _ in range(n):
-            cands = [
-                c for c in champions
-                if c["tier"] == t and c["name"] not in used_global
-            ]
-            if cands:
-                pick = weighted_choice(cands)
-                result.append(pick["name"])
-                used_global.add(pick["name"])
+    while len(result) < 10:
+        cands = [c for c in champions if c["name"] not in used_global]
+        pick = weighted_choice(cands)
+        result.append({
+            "name": pick["name"],
+            "image": pick["image"]
+        })
+        used_global.add(pick["name"])
 
     return result
 
-# ---------- ピック順 ----------
 orders = [
- ["blue","red","red","blue","blue","red","red","blue","blue","red"],
- ["red","blue","blue","red","red","blue","blue","red","red","blue"],
- ["blue","red","blue","red","blue","red","blue","red","blue","red"]
+    ["blue","red","red","blue","blue","red","red","blue","blue","red"],
+    ["red","blue","blue","red","red","blue","blue","red","red","blue"],
+    ["blue","red","red","blue","blue","red","red","blue","blue","red"]
 ]
 
-# ---------- 状態 ----------
 state = {
-    "round": 0,
+    "round": 1,
     "turn": 0,
     "pack": [],
     "picks": {"blue": [], "red": []},
     "time": 30,
     "last": time.time(),
+    "started": False,
     "done": False
 }
 
-def start_round():
-    state["pack"] = create_pack()
-    state["turn"] = 0
-    state["time"] = 30
-    state["last"] = time.time()
-
-def reset_game():
-    global used_global
-    used_global = set()
-
+# ---------- 制御 ----------
+def start_game():
+    state["started"] = True
     state["round"] = 1
     state["turn"] = 0
     state["picks"] = {"blue": [], "red": []}
-    state["done"] = False
-
-    start_round()
+    state["pack"] = create_pack()
+    state["last"] = time.time()
+    state["time"] = 30
 
 # ---------- ルート ----------
-@app.route("/<role>")
-def index(role):
-    return render_template("index.html", role=role)
+@app.route("/")
+def home():
+    return "OK"
 
-@app.route("/reset")
-def reset():
-    reset_game()
-    socketio.emit("state", state)
-    return "ok"
+@app.route("/blue")
+def blue():
+    return render_template("index.html", role="blue")
 
-# ---------- 接続 ----------
+@app.route("/red")
+def red():
+    return render_template("index.html", role="red")
+
+@app.route("/spec")
+def spec():
+    return render_template("index.html", role="spec")
+
+# ---------- socket ----------
 @socketio.on("connect")
 def connect():
-    if state["round"] == 0:
-        reset_game()
     emit("state", state)
 
-# ---------- ピック ----------
+@socketio.on("start")
+def start():
+    global used_global
+    used_global = set()
+    start_game()
+    emit("state", state, broadcast=True)
+
 @socketio.on("pick")
 def pick(data):
+    if not state["started"] or state["done"]:
+        return
+
     role = data["role"]
     champ = data["champ"]
 
-    if role not in ["blue","red"]:
-        return
-
     current = orders[state["round"]-1][state["turn"]]
-
     if role != current:
         return
 
-    if champ not in state["pack"]:
+    obj = next((c for c in state["pack"] if c["name"] == champ), None)
+    if not obj:
         return
 
-    state["pack"].remove(champ)
-    state["picks"][role].append(champ)
+    state["pack"].remove(obj)
+    state["picks"][role].append(obj)
 
     state["turn"] += 1
-    state["time"] = 30
     state["last"] = time.time()
+    state["time"] = 30
 
     # パック終了
-    if len(state["pack"]) == 0:
+    if state["turn"] >= 10:
         if state["round"] < 3:
             state["round"] += 1
-            start_round()
+            state["turn"] = 0
+            state["pack"] = create_pack()
         else:
             state["done"] = True
 
-    socketio.emit("state", state)
+    emit("state", state, broadcast=True)
 
 # ---------- タイマー ----------
 def timer_loop():
     while True:
         socketio.sleep(1)
+
+        if not state["started"] or state["done"]:
+            continue
+
         remain = 30 - int(time.time() - state["last"])
+        state["time"] = max(remain, 0)
 
-        if remain != state["time"]:
-            state["time"] = max(remain,0)
+        if state["time"] <= 0:
+            state["turn"] += 1
+            state["last"] = time.time()
+            state["time"] = 30
 
-            if state["time"] <= 0:
-                state["turn"] += 1
-                state["last"] = time.time()
-                state["time"] = 30
-
-            socketio.emit("state", state)
+        socketio.emit("state", state)
 
 socketio.start_background_task(timer_loop)
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=10000)
+    socketio.run(app)
