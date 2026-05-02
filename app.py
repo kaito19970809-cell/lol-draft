@@ -1,139 +1,158 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>LoLドラフト</title>
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+import eventlet
+eventlet.monkey_patch()
 
-<style>
-body{
- background:#0a1428;
- color:white;
- text-align:center;
- font-family:sans-serif;
-}
-.pack{
- display:flex;
- justify-content:center;
- gap:10px;
- margin:20px;
-}
-.card{
- width:80px;
- height:100px;
- position:relative;
- cursor:pointer;
-}
-.card img{
- width:100%;
- height:100%;
- border-radius:8px;
-}
-.lock{
- position:absolute;
- top:0;
- left:0;
- width:100%;
- height:100%;
- background:rgba(0,0,0,0.6);
-}
-</style>
-</head>
+from flask import Flask, render_template
+from flask_socketio import SocketIO, emit
+import json, random, time
 
-<body>
+app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-<h1>LoLドラフト</h1>
-<h2 id="turn"></h2>
-<div>ラウンド: <span id="round"></span></div>
-<div>残り時間: <span id="time"></span></div>
+print("=== APP START ===")
 
-<button onclick="startGame()">スタート</button>
+# ---------- データ ----------
+with open("champions.json", encoding="utf-8") as f:
+    champions = json.load(f)
 
-<div class="pack" id="pack"></div>
+print("Loaded champions:", len(champions))
 
-<h3>ブルー</h3>
-<div id="blue"></div>
+# ---------- 設定 ----------
+PACK_SIZE = 10
+TOTAL_ROUNDS = 3
 
-<h3>レッド</h3>
-<div id="red"></div>
+orders = [
+    ["blue","red","red","blue","blue","red","red","blue","blue","red"],
+    ["red","blue","blue","red","red","blue","blue","red","red","blue"],
+    ["blue","red","red","blue","blue","red","red","blue","blue","red"]
+]
 
-<script>
-const socket = io();
-const role = "{{ role }}";
-let state = {};
-let order = [];
-
-function imgUrl(champ){
- return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${champ.image}.png`;
+# ---------- 状態 ----------
+state = {
+    "started": False,
+    "round": 1,
+    "turn": 0,
+    "pack": [],
+    "picks": {"blue": [], "red": []},
+    "time": 30,
+    "last": time.time()
 }
 
-function startGame(){
- socket.emit("start");
-}
+used_global = set()  # 全パック重複防止
 
-socket.on("state", s=>{
- state = s;
- render();
-});
+# ---------- パック生成 ----------
+def create_pack():
+    global used_global
 
-function render(){
- if(!state.started){
-   document.getElementById("turn").innerText = "待機中";
-   return;
- }
+    available = [c for c in champions if c["name"] not in used_global]
 
- order = [
-  ["blue","red","red","blue","blue","red","red","blue","blue","red"],
-  ["red","blue","blue","red","red","blue","blue","red","red","blue"],
-  ["blue","red","red","blue","blue","red","red","blue","blue","red"]
- ][state.round-1];
+    if len(available) < PACK_SIZE:
+        used_global = set()
+        available = champions.copy()
 
- const current = order[state.turn];
+    pack = random.sample(available, PACK_SIZE)
 
- document.getElementById("turn").innerText =
-  current==="blue" ? "ブルーのターン" : "レッドのターン";
+    for c in pack:
+        used_global.add(c["name"])
 
- document.getElementById("round").innerText = state.round;
- document.getElementById("time").innerText = state.time;
+    return pack
 
- // パック
- const pack = document.getElementById("pack");
- pack.innerHTML = "";
+# ---------- ラウンド開始 ----------
+def start_round():
+    state["pack"] = create_pack()
+    state["turn"] = 0
+    state["time"] = 30
+    state["last"] = time.time()
 
- state.pack.forEach(champ=>{
-  const div = document.createElement("div");
-  div.className = "card";
+# ---------- ルート ----------
+@app.route("/")
+def home():
+    return "LOL DRAFT RUNNING"
 
-  const clickable = role === current;
+@app.route("/blue")
+def blue():
+    return render_template("index.html", role="blue")
 
-  div.innerHTML = `
-   <img src="${imgUrl(champ)}"
-        onerror="this.src='https://via.placeholder.com/80x100'">
-   ${!clickable ? '<div class="lock"></div>' : ''}
-  `;
+@app.route("/red")
+def red():
+    return render_template("index.html", role="red")
 
-  if(clickable){
-   div.onclick = ()=>pick(champ.name);
-  }
+@app.route("/spec")
+def spec():
+    return render_template("index.html", role="spec")
 
-  pack.appendChild(div);
- });
+# ---------- 接続 ----------
+@socketio.on("connect")
+def connect():
+    emit("state", state)
 
- // ピック表示
- ["blue","red"].forEach(team=>{
-  const el = document.getElementById(team);
-  el.innerHTML = "";
+# ---------- スタート ----------
+@socketio.on("start")
+def start():
+    if not state["started"]:
+        state["started"] = True
+        state["round"] = 1
+        state["picks"] = {"blue": [], "red": []}
+        start_round()
+        emit("state", state, broadcast=True)
 
-  state.picks[team].forEach(c=>{
-   el.innerHTML += `<img src="${imgUrl(c)}" width="50">`;
-  });
- });
-}
+# ---------- ピック ----------
+@socketio.on("pick")
+def pick(data):
+    role = data["role"]
+    name = data["champ"]
 
-function pick(name){
- socket.emit("pick", {role: role, champ: name});
-}
-</script>
+    if not state["started"]:
+        return
 
-</body>
-</html>
+    order = orders[state["round"]-1]
+    current = order[state["turn"]]
+
+    if role != current:
+        return
+
+    champ = next((c for c in state["pack"] if c["name"] == name), None)
+    if not champ:
+        return
+
+    state["pack"].remove(champ)
+    state["picks"][role].append(champ)
+
+    state["turn"] += 1
+    state["time"] = 30
+    state["last"] = time.time()
+
+    # パック終了
+    if state["turn"] >= PACK_SIZE:
+        if state["round"] < TOTAL_ROUNDS:
+            state["round"] += 1
+            start_round()
+        else:
+            state["started"] = False
+
+    emit("state", state, broadcast=True)
+
+# ---------- タイマー ----------
+def timer():
+    while True:
+        socketio.sleep(1)
+
+        if not state["started"]:
+            continue
+
+        remain = 30 - int(time.time() - state["last"])
+
+        if remain != state["time"]:
+            state["time"] = max(remain, 0)
+
+            if state["time"] <= 0:
+                state["turn"] += 1
+                state["last"] = time.time()
+                state["time"] = 30
+
+            socketio.emit("state", state)
+
+socketio.start_background_task(timer)
+
+# ---------- 起動 ----------
+if __name__ == "__main__":
+    socketio.run(app, host="0.0.0.0", port=10000)
