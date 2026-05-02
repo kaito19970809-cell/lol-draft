@@ -14,6 +14,9 @@ with open("champions.json", encoding="utf-8") as f:
 
 TIER_WEIGHT = {"S":0.7,"A":1.0,"B":1.2,"C":1.5}
 
+# 🔥 全体で重複禁止
+used_global = set()
+
 def weighted_choice(cands):
     ws = [TIER_WEIGHT[c["tier"]] for c in cands]
     total = sum(ws)
@@ -27,34 +30,34 @@ def weighted_choice(cands):
 
 def create_pack():
     result = []
-    used = set()
     tier_need = {"S":2,"A":3,"B":4,"C":1}
 
     for t,n in tier_need.items():
         for _ in range(n):
-            cands = [c for c in champions if c["tier"]==t and c["name"] not in used]
+            cands = [
+                c for c in champions
+                if c["tier"] == t and c["name"] not in used_global
+            ]
             if cands:
                 pick = weighted_choice(cands)
                 result.append(pick["name"])
-                used.add(pick["name"])
+                used_global.add(pick["name"])
 
     return result
 
-# ---------- 順番 ----------
+# ---------- ピック順 ----------
 orders = [
-    ["P1","P2","P2","P1","P1","P2","P2","P1","P1","P2"],
-    ["P2","P1","P1","P2","P2","P1","P1","P2","P2","P1"],
-    ["P1","P2","P1","P2","P1","P2","P1","P2","P1","P2"]
+ ["blue","red","red","blue","blue","red","red","blue","blue","red"],
+ ["red","blue","blue","red","red","blue","blue","red","red","blue"],
+ ["blue","red","blue","red","blue","red","blue","red","blue","red"]
 ]
-
-players = {"blue":"P1","red":"P2"}
 
 # ---------- 状態 ----------
 state = {
     "round": 0,
     "turn": 0,
     "pack": [],
-    "picks": {"P1": [], "P2": []},
+    "picks": {"blue": [], "red": []},
     "time": 30,
     "last": time.time(),
     "done": False
@@ -66,29 +69,33 @@ def start_round():
     state["time"] = 30
     state["last"] = time.time()
 
+def reset_game():
+    global used_global
+    used_global = set()
+
+    state["round"] = 1
+    state["turn"] = 0
+    state["picks"] = {"blue": [], "red": []}
+    state["done"] = False
+
+    start_round()
+
 # ---------- ルート ----------
-@app.route("/")
-def home():
-    return "LOL DRAFT OK"
+@app.route("/<role>")
+def index(role):
+    return render_template("index.html", role=role)
 
-@app.route("/blue")
-def blue():
-    return render_template("index.html", role="blue")
-
-@app.route("/red")
-def red():
-    return render_template("index.html", role="red")
-
-@app.route("/spec")
-def spec():
-    return render_template("index.html", role="spec")
+@app.route("/reset")
+def reset():
+    reset_game()
+    socketio.emit("state", state)
+    return "ok"
 
 # ---------- 接続 ----------
 @socketio.on("connect")
 def connect():
     if state["round"] == 0:
-        state["round"] = 1
-        start_round()
+        reset_game()
     emit("state", state)
 
 # ---------- ピック ----------
@@ -97,20 +104,19 @@ def pick(data):
     role = data["role"]
     champ = data["champ"]
 
-    if role == "spec":
+    if role not in ["blue","red"]:
         return
 
-    player = players[role]
     current = orders[state["round"]-1][state["turn"]]
 
-    if player != current:
+    if role != current:
         return
 
     if champ not in state["pack"]:
         return
 
     state["pack"].remove(champ)
-    state["picks"][player].append(champ)
+    state["picks"][role].append(champ)
 
     state["turn"] += 1
     state["time"] = 30
