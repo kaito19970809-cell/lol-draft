@@ -1,78 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>LoLドラフト</title>
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-
-<style>
-body{
- background:#0a1428;
- color:white;
- text-align:center;
- font-family:sans-serif;
-}
-
-.pack{
- display:flex;
- justify-content:center;
- gap:10px;
- margin:20px;
-}
-
-.card{
- width:80px;
- height:100px;
- position:relative;
- cursor:pointer;
-}
-
-.card img{
- width:100%;
- height:100%;
- border-radius:8px;
-}
-
-.lock{
- position:absolute;
- top:0;
- left:0;
- width:100%;
- height:100%;
- background:rgba(0,0,0,0.6);
-}
-
-.pick img{
- width:50px;
- margin:2px;
-}
-
-button{
- margin:5px;
- padding:8px;
-}
-</style>
-</head>
-
-<body>
-
-<h1>LoLドラフト</h1>
-
-<h2 id="turn">待機中</h2>
-<div>ラウンド: <span id="round">1</span></div>
-<div>残り時間: <span id="time">30</span></div>
-
-<button onclick="ready()">準備OK</button>
-<button onclick="reset()">リセット</button>
-
-<div class="pack" id="pack"></div>
-
-<h3>ブルー</h3>
-<div id="blue" class="pick"></div>
-
-<h3>レッド</h3>
-<div id="red" class="pick"></div>
-
 <script>
 const socket = io();
 const role = "{{ role }}";
@@ -83,7 +8,7 @@ function imgUrl(champ){
 }
 
 function ready(){
- socket.emit("ready", {role});
+ socket.emit("start", {role: role}); // ←修正
 }
 
 function reset(){
@@ -116,7 +41,6 @@ function render(){
  document.getElementById("round").innerText = state.round;
  document.getElementById("time").innerText = state.time;
 
- // パック
  const pack = document.getElementById("pack");
  pack.innerHTML = "";
 
@@ -133,13 +57,12 @@ function render(){
   `;
 
   if(clickable){
-   div.onclick = ()=>pick(champ["名前"]);
+   div.onclick = ()=>pick(champ.name); // ←修正
   }
 
   pack.appendChild(div);
  });
 
- // ピック表示
  ["blue","red"].forEach(team=>{
   const el = document.getElementById(team);
   el.innerHTML = "";
@@ -151,9 +74,6 @@ function render(){
 }
 
 function pick(name){
- socket.emit("pick", {role, champ:name});
+ socket.emit("pick", {role: role, champ:name});
 }
 </script>
-
-</body>
-</html>
