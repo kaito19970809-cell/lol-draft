@@ -3,21 +3,14 @@ eventlet.monkey_patch()
 
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
-import json, random, time, traceback
+import json, random, time
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
-
-print("=== APP START ===")
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # ---------- データ ----------
-try:
-    with open("champions.json", encoding="utf-8") as f:
-        champions = json.load(f)
-    print(f"Loaded champions: {len(champions)}")
-except Exception as e:
-    print("❌ champions.json 読み込み失敗")
-    traceback.print_exc()
+with open("champions.json", encoding="utf-8") as f:
+    champions = json.load(f)
 
 TIER_WEIGHT = {"S":0.7,"A":1.0,"B":1.2,"C":1.5}
 
@@ -33,7 +26,6 @@ def weighted_choice(cands):
     return random.choice(cands)
 
 def create_pack():
-    print(">>> create_pack called")
     result = []
     used = set()
     tier_need = {"S":2,"A":3,"B":4,"C":1}
@@ -46,9 +38,9 @@ def create_pack():
                 result.append(pick["name"])
                 used.add(pick["name"])
 
-    print("PACK:", result)
     return result
 
+# ---------- 順番 ----------
 orders = [
     ["P1","P2","P2","P1","P1","P2","P2","P1","P1","P2"],
     ["P2","P1","P1","P2","P2","P1","P1","P2","P2","P1"],
@@ -57,10 +49,11 @@ orders = [
 
 players = {"blue":"P1","red":"P2"}
 
+# ---------- 状態 ----------
 state = {
     "round": 0,
     "turn": 0,
-    "packs": {"P1": [], "P2": []},
+    "pack": [],
     "picks": {"P1": [], "P2": []},
     "time": 30,
     "last": time.time(),
@@ -68,9 +61,7 @@ state = {
 }
 
 def start_round():
-    print(f"=== START ROUND {state['round']} ===")
-    state["packs"]["P1"] = create_pack()
-    state["packs"]["P2"] = create_pack()
+    state["pack"] = create_pack()
     state["turn"] = 0
     state["time"] = 30
     state["last"] = time.time()
@@ -82,99 +73,76 @@ def home():
 
 @app.route("/blue")
 def blue():
-    print("Access: /blue")
     return render_template("index.html", role="blue")
 
 @app.route("/red")
 def red():
-    print("Access: /red")
     return render_template("index.html", role="red")
 
 @app.route("/spec")
 def spec():
-    print("Access: /spec")
     return render_template("index.html", role="spec")
 
 # ---------- 接続 ----------
 @socketio.on("connect")
 def connect():
-    print(">>> CONNECTED")
-    try:
-        if state["round"] == 0:
-            state["round"] = 1
-            start_round()
-        emit("state", state)
-    except:
-        traceback.print_exc()
+    if state["round"] == 0:
+        state["round"] = 1
+        start_round()
+    emit("state", state)
 
 # ---------- ピック ----------
 @socketio.on("pick")
 def pick(data):
-    print(">>> PICK EVENT", data)
+    role = data["role"]
+    champ = data["champ"]
 
-    try:
-        role = data["role"]
-        champ = data["champ"]
+    if role == "spec":
+        return
 
-        if role == "spec":
-            print("spec blocked")
-            return
+    player = players[role]
+    current = orders[state["round"]-1][state["turn"]]
 
-        player = players[role]
-        current = orders[state["round"]-1][state["turn"]]
+    if player != current:
+        return
 
-        if player != current:
-            print("❌ turn mismatch")
-            return
+    if champ not in state["pack"]:
+        return
 
-        if champ not in state["packs"][player]:
-            print("❌ champ not in pack")
-            return
+    state["pack"].remove(champ)
+    state["picks"][player].append(champ)
 
-        state["packs"][player].remove(champ)
-        state["picks"][player].append(champ)
+    state["turn"] += 1
+    state["time"] = 30
+    state["last"] = time.time()
 
-        other = "P2" if player=="P1" else "P1"
-        state["packs"][other].append(champ)
+    # パック終了
+    if len(state["pack"]) == 0:
+        if state["round"] < 3:
+            state["round"] += 1
+            start_round()
+        else:
+            state["done"] = True
 
-        state["turn"] += 1
-        state["time"] = 30
-        state["last"] = time.time()
-
-        if state["turn"] >= 10:
-            if state["round"] < 3:
-                state["round"] += 1
-                start_round()
-            else:
-                state["done"] = True
-
-        socketio.emit("state", state)
-    except:
-        traceback.print_exc()
+    socketio.emit("state", state)
 
 # ---------- タイマー ----------
 def timer_loop():
-    print("Timer started")
     while True:
         socketio.sleep(1)
-        try:
-            remain = 30 - int(time.time() - state["last"])
+        remain = 30 - int(time.time() - state["last"])
 
-            if remain != state["time"]:
-                state["time"] = max(remain,0)
+        if remain != state["time"]:
+            state["time"] = max(remain,0)
 
-                if state["time"] <= 0:
-                    print("⏰ TIMEOUT")
-                    state["turn"] += 1
-                    state["last"] = time.time()
-                    state["time"] = 30
+            if state["time"] <= 0:
+                state["turn"] += 1
+                state["last"] = time.time()
+                state["time"] = 30
 
-                socketio.emit("state", state)
-        except:
-            traceback.print_exc()
+            socketio.emit("state", state)
 
 socketio.start_background_task(timer_loop)
 
-# ---------- 起動 ----------
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=10000)
