@@ -2,130 +2,85 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<title>LoL Draft</title>
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-
 <style>
-body{background:#0b0f1a;color:white;font-family:Arial;margin:0}
-.container{display:flex;height:100vh}
-.side{width:25%;padding:10px}
-.center{width:50%;text-align:center}
-.blue{background:#0f2a44}
-.red{background:#441010}
-
-.pack{display:grid;grid-template-columns:repeat(5,80px);gap:10px;justify-content:center}
-.pack img{width:80px;border-radius:10px;cursor:pointer}
-
-.player img{width:50px;margin:2px}
-
-#timer{
-width:120px;height:120px;border-radius:50%;
-border:6px solid gold;margin:auto;
-display:flex;align-items:center;justify-content:center;
-font-size:40px
+body {
+    background:#0b0f1a;
+    color:white;
+    font-family:sans-serif;
+    text-align:center;
 }
-.low{border-color:red;color:red;animation:blink .5s infinite}
-@keyframes blink{50%{opacity:.3}}
+
+.pack {
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+}
+
+.card {
+    border:1px solid #444;
+    padding:10px;
+    margin:5px;
+    cursor:pointer;
+    background:#111;
+    transition:0.2s;
+}
+.card:hover { background:#333; }
+
+.timer {
+    font-size:30px;
+    margin:10px;
+}
 </style>
 </head>
-
 <body>
 
-<div class="container">
+<h2 id="role"></h2>
+<div class="timer" id="timer">30</div>
 
-<div class="side blue"><h2>P1</h2><div id="p1"></div></div>
+<h3>パック</h3>
+<div class="pack" id="pack"></div>
 
-<div class="center">
-<h1>DRAFT</h1>
-<div id="round"></div>
-<div id="turn"></div>
+<h3>自分のピック</h3>
+<div id="my"></div>
 
-<div id="timer"><span id="time"></span></div>
+<h3>相手のピック</h3>
+<div id="enemy"></div>
 
-<div id="pack" class="pack"></div>
-
-<div id="done"></div>
-</div>
-
-<div class="side red"><h2>P2</h2><div id="p2"></div></div>
-
-</div>
-
-<audio id="pickSound" src="/static/pick.mp3"></audio>
+<audio id="sound" src="/static/pick.mp3"></audio>
 
 <script>
-const socket = io();
-const role = "{{role}}";
+const role = "{{role}}"
+document.getElementById("role").innerText = role.toUpperCase()
 
-let state = {};
+const socket = io()
 
-function myPlayer(){
-    if(role==="blue") return "P1";
-    if(role==="red") return "P2";
-    return null;
-}
+socket.on("state", s => {
+    document.getElementById("timer").innerText = s.time
 
-function currentPlayer(){
-    const orders = [
-        ["P1","P2","P2","P1","P1","P2","P2","P1","P1","P2"],
-        ["P2","P1","P1","P2","P2","P1","P1","P2","P2","P1"],
-        ["P1","P2","P1","P2","P1","P2","P1","P2","P1","P2"]
-    ];
-    return orders[state.round-1][state.turn];
-}
+    const me = role === "blue" ? "P1" : "P2"
+    const enemy = role === "blue" ? "P2" : "P1"
 
-function render(){
+    const pack = document.getElementById("pack")
+    pack.innerHTML = ""
 
-    document.getElementById("round").textContent = "PACK "+state.round+"/3";
-    document.getElementById("time").textContent = state.time;
-
-    if(state.time <= 5){
-        document.getElementById("timer").classList.add("low");
-    }else{
-        document.getElementById("timer").classList.remove("low");
+    if(role !== "spec"){
+        s.packs[me].forEach(c => {
+            const div = document.createElement("div")
+            div.className = "card"
+            div.innerText = c
+            div.onclick = () => {
+                socket.emit("pick",{role:role, champ:c})
+                document.getElementById("sound").play()
+            }
+            pack.appendChild(div)
+        })
     }
 
-    if(!state.done){
-        document.getElementById("turn").textContent =
-            "TURN: "+currentPlayer();
-    }
-
-    const me = myPlayer();
-    const packDiv = document.getElementById("pack");
-    packDiv.innerHTML = "";
-
-    if(!state.done && me){
-        (state.packs[me]||[]).forEach(c=>{
-            const img=document.createElement("img");
-            img.src=`https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${c}.png`;
-
-            img.onclick=()=>{
-                if(me!==currentPlayer()){
-                    alert("ターンじゃない");
-                    return;
-                }
-                document.getElementById("pickSound").play();
-                socket.emit("pick",{role:role,champ:c});
-            };
-
-            packDiv.appendChild(img);
-        });
-    }
-
-    if(state.done){
-        document.getElementById("done").textContent="ドラフト完了";
-    }
-
-    document.getElementById("p1").innerHTML =
-        state.picks["P1"].map(c=>`<img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${c}.png">`).join("");
-
-    document.getElementById("p2").innerHTML =
-        state.picks["P2"].map(c=>`<img src="https://ddragon.leagueoflegends.com/cdn/13.1.1/img/champion/${c}.png">`).join("");
-}
-
-socket.on("state", s=>{
-    state = s;
-    render();
-});
+    document.getElementById("my").innerText = s.picks[me].join(", ")
+    document.getElementById("enemy").innerText = s.picks[enemy].join(", ")
+})
 </script>
 
 </body>
