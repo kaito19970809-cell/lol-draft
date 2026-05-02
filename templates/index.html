@@ -1,16 +1,93 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>LoL Draft</title>
+<meta charset="UTF-8">
+<title>LoL Draft</title>
+
+<style>
+body {
+    background: #0a0f1a;
+    color: white;
+    font-family: sans-serif;
+    text-align: center;
+}
+
+/* PACK */
+#pack {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* カード */
+.card {
+    width: 100px;
+    height: 140px;
+    background: #111;
+    border: 2px solid #333;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: 0.2s;
+    position: relative;
+}
+
+/* 画像 */
+.card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ホバー */
+.card:hover {
+    transform: scale(1.15);
+    border-color: gold;
+    z-index: 10;
+}
+
+/* 名前 */
+.card-name {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.7);
+    font-size: 12px;
+}
+
+/* ピック済み */
+.picked {
+    filter: grayscale(100%);
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* アニメーション */
+.fade-in {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {opacity:0; transform:scale(0.8);}
+    to {opacity:1; transform:scale(1);}
+}
+
+.timer {
+    font-size: 30px;
+    color: gold;
+}
+</style>
 </head>
-<body style="background:black;color:white;font-family:sans-serif;">
+
+<body>
 
 <h1>LoL Draft</h1>
 
 <div>ROLE: {{ role }}</div>
 <div>ROUND: <span id="round"></span></div>
 <div>TURN: <span id="turn"></span></div>
-<div>TIME: <span id="timer"></span></div>
+<div class="timer" id="timer"></div>
 
 <h2>PACK</h2>
 <div id="pack"></div>
@@ -22,10 +99,17 @@
 <div id="p2"></div>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
 <script>
 const socket = io();
 const ROLE = "{{ role }}";
 
+// 🔥 画像URL生成
+function imgUrl(name) {
+    return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${name}.png`;
+}
+
+// 🔥 ピック送信
 function pick(champ) {
     socket.emit("pick", {
         role: ROLE,
@@ -33,28 +117,46 @@ function pick(champ) {
     });
 }
 
+// 🔥 カード生成
+function createCard(champ, pickedList) {
+    const div = document.createElement("div");
+    div.className = "card fade-in";
+
+    if (pickedList.includes(champ)) {
+        div.classList.add("picked");
+    }
+
+    div.innerHTML = `
+        <img src="${imgUrl(champ)}">
+        <div class="card-name">${champ}</div>
+    `;
+
+    div.onclick = () => pick(champ);
+
+    return div;
+}
+
+// 🔥 描画
 function render(state) {
     document.getElementById("round").innerText = state.round;
     document.getElementById("turn").innerText = state.turn;
     document.getElementById("timer").innerText = state.time;
 
-    // pack
     const packDiv = document.getElementById("pack");
     packDiv.innerHTML = "";
+
+    const pickedAll = [...state.picks.P1, ...state.picks.P2];
+
     state.pack.forEach(champ => {
-        const btn = document.createElement("button");
-        btn.innerText = champ;
-        btn.onclick = () => pick(champ);
-        packDiv.appendChild(btn);
+        const card = createCard(champ, pickedAll);
+        packDiv.appendChild(card);
     });
 
-    // P1
     document.getElementById("p1").innerText = state.picks.P1.join(", ");
-
-    // P2
     document.getElementById("p2").innerText = state.picks.P2.join(", ");
 }
 
+// 🔥 状態受信
 socket.on("state", (state) => {
     render(state);
 });
