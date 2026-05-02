@@ -7,19 +7,19 @@
 
 <style>
 body{background:#0a1428;color:white;text-align:center}
-.pack{display:flex;justify-content:center;gap:10px}
-.card{width:80px;height:100px;cursor:pointer;position:relative}
+.pack{display:flex;justify-content:center;gap:10px;margin:20px}
+.card{width:80px;height:100px;position:relative;cursor:pointer}
 .card img{width:100%;border-radius:8px}
-.lock{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.6)}
+.lock{position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.5)}
 </style>
 </head>
 
 <body>
 
 <h1>LoLドラフト</h1>
-<h2 id="turn"></h2>
-<div>ラウンド: <span id="round"></span></div>
-<div>残り時間: <span id="time"></span></div>
+<h2 id="turn">待機中</h2>
+<div>ラウンド: <span id="round">-</span></div>
+<div>残り時間: <span id="time">-</span></div>
 
 <button onclick="start()">スタート</button>
 <button onclick="reset()">リセット</button>
@@ -56,8 +56,8 @@ function reset(){
 
 function render(){
  if(!state.started){
-  document.getElementById("turn").innerText = "待機中";
-  return;
+   document.getElementById("turn").innerText = "待機中";
+   return;
  }
 
  const orders = [
