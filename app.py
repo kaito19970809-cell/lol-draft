@@ -1,8 +1,8 @@
 import eventlet
 eventlet.monkey_patch()
 
-from flask import Flask, render_template
-from flask_socketio import SocketIO, emit
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, emit, join_room
 import json, random, time
 
 app = Flask(__name__)
@@ -45,19 +45,20 @@ orders = [
     ["P1","P2","P1","P2","P1","P2","P1","P2","P1","P2"]
 ]
 
-players = {"blue":"P1","red":"P2"}
+rooms = {}
 
-state = {
-    "round": 0,
-    "turn": 0,
-    "packs": {"P1": [], "P2": []},
-    "picks": {"P1": [], "P2": []},
-    "time": 30,
-    "last": time.time(),
-    "done": False
-}
+def new_state():
+    return {
+        "round": 0,
+        "turn": 0,
+        "packs": {"P1": [], "P2": []},
+        "picks": {"P1": [], "P2": []},
+        "time": 30,
+        "last": time.time(),
+        "done": False
+    }
 
-def start_round():
+def start_round(state):
     state["packs"]["P1"] = create_pack()
     state["packs"]["P2"] = create_pack()
     state["turn"] = 0
@@ -67,42 +68,45 @@ def start_round():
 # ---------- ルート ----------
 @app.route("/")
 def home():
-    return "LOL DRAFT OK"
+    return "Server OK"
 
-@app.route("/blue")
-def blue():
-    return render_template("index.html", role="blue")
+@app.route("/lobby/<room>")
+def lobby(room):
+    if room not in rooms:
+        rooms[room] = new_state()
+    return render_template("lobby.html", room=room)
 
-@app.route("/red")
-def red():
-    return render_template("index.html", role="red")
-
-@app.route("/spec")
-def spec():
-    return render_template("index.html", role="spec")
+@app.route("/room/<room>")
+def room(room):
+    return render_template("index.html", room=room)
 
 # ---------- 接続 ----------
 @socketio.on("connect")
 def connect():
+    room = request.args.get("room")
+
+    if room not in rooms:
+        rooms[room] = new_state()
+
+    join_room(room)
+    state = rooms[room]
+
     if state["round"] == 0:
         state["round"] = 1
-        start_round()
-    emit("state", state)
+        start_round(state)
+
+    emit("state", state, room=room)
 
 # ---------- ピック ----------
 @socketio.on("pick")
 def pick(data):
-    role = data["role"]
+    room = request.args.get("room")
+    state = rooms[room]
+
     champ = data["champ"]
 
-    if role == "spec":
-        return
-
-    player = players[role]
     current = orders[state["round"]-1][state["turn"]]
-
-    if player != current:
-        return
+    player = current
 
     if champ not in state["packs"][player]:
         return
@@ -120,27 +124,29 @@ def pick(data):
     if state["turn"] >= 10:
         if state["round"] < 3:
             state["round"] += 1
-            start_round()
+            start_round(state)
         else:
             state["done"] = True
 
-    emit("state", state, broadcast=True)
+    socketio.emit("state", state, room=room)
 
 # ---------- タイマー ----------
 def timer_loop():
     while True:
         socketio.sleep(1)
-        remain = 30 - int(time.time() - state["last"])
 
-        if remain != state["time"]:
-            state["time"] = max(remain,0)
+        for room, state in rooms.items():
+            remain = 30 - int(time.time() - state["last"])
 
-            if state["time"] <= 0:
-                state["turn"] += 1
-                state["last"] = time.time()
-                state["time"] = 30
+            if remain != state["time"]:
+                state["time"] = max(remain,0)
 
-            socketio.emit("state", state)
+                if state["time"] <= 0:
+                    state["turn"] += 1
+                    state["last"] = time.time()
+                    state["time"] = 30
+
+                socketio.emit("state", state, room=room)
 
 socketio.start_background_task(timer_loop)
 
