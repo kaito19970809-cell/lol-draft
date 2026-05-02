@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 import json, random, time
 
@@ -9,7 +9,6 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 with open("champions.json", encoding="utf-8") as f:
     champions = json.load(f)
 
-# ---------- ティア ----------
 TIER_WEIGHT = {"S":0.7,"A":1.0,"B":1.2,"C":1.5}
 
 def weighted_choice(cands):
@@ -35,10 +34,8 @@ def create_pack():
                 pick = weighted_choice(cands)
                 result.append(pick["name"])
                 used.add(pick["name"])
-
     return result
 
-# ---------- 順番 ----------
 orders = [
     ["P1","P2","P2","P1","P1","P2","P2","P1","P1","P2"],
     ["P2","P1","P1","P2","P2","P1","P1","P2","P2","P1"],
@@ -47,7 +44,6 @@ orders = [
 
 players = {"blue":"P1","red":"P2"}
 
-# ---------- 状態 ----------
 state = {
     "round": 0,
     "turn": 0,
@@ -65,28 +61,22 @@ def start_round():
     state["time"] = 30
     state["last"] = time.time()
 
-# ---------- 🔐 権限URL ----------
-def get_role():
-    key = request.args.get("key")
-
-    if key == "blue123":
-        return "blue"
-    elif key == "red123":
-        return "red"
-    else:
-        return "spec"
-
 # ---------- ルート ----------
 @app.route("/")
 def home():
-    return "LoL Draft Running"
+    return "LOL DRAFT OK"
 
 @app.route("/blue")
+def blue():
+    return render_template("index.html", role="blue")
+
 @app.route("/red")
+def red():
+    return render_template("index.html", role="red")
+
 @app.route("/spec")
-def index():
-    role = get_role()
-    return render_template("index.html", role=role)
+def spec():
+    return render_template("index.html", role="spec")
 
 # ---------- 接続 ----------
 @socketio.on("connect")
