@@ -12,32 +12,22 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 with open("champions.json", encoding="utf-8") as f:
     champions = json.load(f)
 
-TIER_WEIGHT = {"S":0.7,"A":1.0,"B":1.2,"C":1.5}
+# ---------- ティア確率 ----------
+TIER_DISTRIBUTION = {
+    "S": 0.15,
+    "A": 0.35,
+    "B": 0.35,
+    "C": 0.15
+}
 
-def weighted_choice(cands):
-    ws = [TIER_WEIGHT[c["tier"]] for c in cands]
-    total = sum(ws)
-    r = random.uniform(0,total)
-    s = 0
-    for c,w in zip(cands,ws):
-        s += w
-        if s >= r:
-            return c
-    return random.choice(cands)
-
-def create_pack():
-    result = []
-    used = set()
-    tier_need = {"S":2,"A":3,"B":4,"C":1}
-
-    for t,n in tier_need.items():
-        for _ in range(n):
-            cands = [c for c in champions if c["tier"]==t and c["name"] not in used]
-            if cands:
-                pick = weighted_choice(cands)
-                result.append(pick["name"])
-                used.add(pick["name"])
-    return result
+# ---------- ロール目標 ----------
+ROLE_TARGET = {
+    "TOP": 2,
+    "JG": 2,
+    "MID": 2,
+    "ADC": 2,
+    "SUP": 2
+}
 
 orders = [
     ["P1","P2","P2","P1","P1","P2","P2","P1","P1","P2"],
@@ -53,14 +43,79 @@ def new_state():
         "turn": 0,
         "packs": {"P1": [], "P2": []},
         "picks": {"P1": [], "P2": []},
+        "used": set(),
         "time": 30,
         "last": time.time(),
         "done": False
     }
 
+# ---------- ティア抽選 ----------
+def pick_tier():
+    r = random.random()
+    total = 0
+    for t, w in TIER_DISTRIBUTION.items():
+        total += w
+        if r <= total:
+            return t
+    return "B"
+
+# ---------- ロールカウント ----------
+def count_roles(result):
+    count = {"TOP":0,"JG":0,"MID":0,"ADC":0,"SUP":0}
+    for name in result:
+        champ = next(c for c in champions if c["name"] == name)
+        for r in champ["roles"]:
+            count[r] += 1
+    return count
+
+# ---------- パック生成 ----------
+def create_pack(state):
+    result = []
+
+    while len(result) < 10:
+        role_count = count_roles(result)
+
+        need_roles = [r for r in ROLE_TARGET if role_count[r] < ROLE_TARGET[r]]
+
+        if need_roles:
+            target_role = random.choice(need_roles)
+
+            cands = [
+                c for c in champions
+                if target_role in c["roles"]
+                and c["name"] not in state["used"]
+                and c["name"] not in result
+            ]
+        else:
+            tier = pick_tier()
+
+            cands = [
+                c for c in champions
+                if c["tier"] == tier
+                and c["name"] not in state["used"]
+                and c["name"] not in result
+            ]
+
+        # フォールバック
+        if not cands:
+            cands = [
+                c for c in champions
+                if c["name"] not in state["used"]
+                and c["name"] not in result
+            ]
+
+        if not cands:
+            break
+
+        pick = random.choice(cands)
+        result.append(pick["name"])
+        state["used"].add(pick["name"])
+
+    return result
+
 def start_round(state):
-    state["packs"]["P1"] = create_pack()
-    state["packs"]["P2"] = create_pack()
+    state["packs"]["P1"] = create_pack(state)
+    state["packs"]["P2"] = create_pack(state)
     state["turn"] = 0
     state["time"] = 30
     state["last"] = time.time()
@@ -68,7 +123,7 @@ def start_round(state):
 # ---------- ルート ----------
 @app.route("/")
 def home():
-    return "Server OK"
+    return "OK"
 
 @app.route("/lobby/<room>")
 def lobby(room):
@@ -134,7 +189,6 @@ def pick(data):
 def timer_loop():
     while True:
         socketio.sleep(1)
-
         for room, state in rooms.items():
             remain = 30 - int(time.time() - state["last"])
 
