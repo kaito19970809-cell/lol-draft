@@ -8,55 +8,55 @@ import json, random, time
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-print("=== APP START ===")
-
 # ---------- データ ----------
 with open("champions.json", encoding="utf-8") as f:
     champions = json.load(f)
 
-print("Loaded champions:", len(champions))
-
-# ---------- 設定 ----------
 PACK_SIZE = 10
 TOTAL_ROUNDS = 3
 
 orders = [
-    ["blue","red","red","blue","blue","red","red","blue","blue","red"],
-    ["red","blue","blue","red","red","blue","blue","red","red","blue"],
-    ["blue","red","red","blue","blue","red","red","blue","blue","red"]
+ ["blue","red","red","blue","blue","red","red","blue","blue","red"],
+ ["red","blue","blue","red","red","blue","blue","red","red","blue"],
+ ["blue","red","red","blue","blue","red","red","blue","blue","red"]
 ]
 
 # ---------- 状態 ----------
-state = {
-    "started": False,
-    "round": 1,
-    "turn": 0,
-    "pack": [],
-    "picks": {"blue": [], "red": []},
-    "time": 30,
-    "last": time.time()
-}
+state = {}
+used = set()
 
-used_global = set()  # 全パック重複防止
+def reset_state():
+    global state, used
+    used = set()
+    state = {
+        "started": False,
+        "round": 1,
+        "turn": 0,
+        "pack": [],
+        "picks": {"blue": [], "red": []},
+        "time": 30,
+        "last": time.time()
+    }
+
+reset_state()
 
 # ---------- パック生成 ----------
 def create_pack():
-    global used_global
+    global used
 
-    available = [c for c in champions if c["name"] not in used_global]
+    pool = [c for c in champions if c["name"] not in used]
 
-    if len(available) < PACK_SIZE:
-        used_global = set()
-        available = champions.copy()
+    if len(pool) < PACK_SIZE:
+        used = set()
+        pool = champions.copy()
 
-    pack = random.sample(available, PACK_SIZE)
+    pack = random.sample(pool, PACK_SIZE)
 
     for c in pack:
-        used_global.add(c["name"])
+        used.add(c["name"])
 
     return pack
 
-# ---------- ラウンド開始 ----------
 def start_round():
     state["pack"] = create_pack()
     state["turn"] = 0
@@ -66,7 +66,7 @@ def start_round():
 # ---------- ルート ----------
 @app.route("/")
 def home():
-    return "LOL DRAFT RUNNING"
+    return "OK"
 
 @app.route("/blue")
 def blue():
@@ -76,16 +76,11 @@ def blue():
 def red():
     return render_template("index.html", role="red")
 
-@app.route("/spec")
-def spec():
-    return render_template("index.html", role="spec")
-
-# ---------- 接続 ----------
+# ---------- socket ----------
 @socketio.on("connect")
 def connect():
     emit("state", state)
 
-# ---------- スタート ----------
 @socketio.on("start")
 def start():
     if not state["started"]:
@@ -95,7 +90,11 @@ def start():
         start_round()
         emit("state", state, broadcast=True)
 
-# ---------- ピック ----------
+@socketio.on("reset")
+def reset():
+    reset_state()
+    emit("state", state, broadcast=True)
+
 @socketio.on("pick")
 def pick(data):
     role = data["role"]
@@ -105,6 +104,10 @@ def pick(data):
         return
 
     order = orders[state["round"]-1]
+
+    if state["turn"] >= len(order):
+        return
+
     current = order[state["turn"]]
 
     if role != current:
@@ -121,8 +124,8 @@ def pick(data):
     state["time"] = 30
     state["last"] = time.time()
 
-    # パック終了
-    if state["turn"] >= PACK_SIZE:
+    # ラウンド終了
+    if len(state["pack"]) == 0:
         if state["round"] < TOTAL_ROUNDS:
             state["round"] += 1
             start_round()
@@ -141,18 +144,16 @@ def timer():
 
         remain = 30 - int(time.time() - state["last"])
 
-        if remain != state["time"]:
-            state["time"] = max(remain, 0)
+        if remain <= 0:
+            state["turn"] += 1
+            state["last"] = time.time()
+            state["time"] = 30
+        else:
+            state["time"] = remain
 
-            if state["time"] <= 0:
-                state["turn"] += 1
-                state["last"] = time.time()
-                state["time"] = 30
-
-            socketio.emit("state", state)
+        socketio.emit("state", state)
 
 socketio.start_background_task(timer)
 
-# ---------- 起動 ----------
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=10000)
