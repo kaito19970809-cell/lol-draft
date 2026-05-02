@@ -8,7 +8,6 @@ import json, random, time
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# ---------- データ ----------
 with open("champions.json", encoding="utf-8") as f:
     champions = json.load(f)
 
@@ -21,7 +20,6 @@ orders = [
  ["blue","red","red","blue","blue","red","red","blue","blue","red"]
 ]
 
-# ---------- 状態 ----------
 state = {}
 used = set()
 
@@ -30,6 +28,7 @@ def reset_state():
     used = set()
     state = {
         "started": False,
+        "ready": {"blue": False, "red": False},  # ★追加
         "round": 1,
         "turn": 0,
         "pack": [],
@@ -40,10 +39,8 @@ def reset_state():
 
 reset_state()
 
-# ---------- パック生成 ----------
 def create_pack():
     global used
-
     pool = [c for c in champions if c["name"] not in used]
 
     if len(pool) < PACK_SIZE:
@@ -63,7 +60,7 @@ def start_round():
     state["time"] = 30
     state["last"] = time.time()
 
-# ---------- ルート ----------
+# ---------- routes ----------
 @app.route("/")
 def home():
     return "OK"
@@ -82,13 +79,19 @@ def connect():
     emit("state", state)
 
 @socketio.on("start")
-def start():
-    if not state["started"]:
+def start(data):
+    role = data["role"]
+
+    state["ready"][role] = True
+
+    # 両方押したら開始
+    if state["ready"]["blue"] and state["ready"]["red"]:
         state["started"] = True
         state["round"] = 1
         state["picks"] = {"blue": [], "red": []}
         start_round()
-        emit("state", state, broadcast=True)
+
+    emit("state", state, broadcast=True)
 
 @socketio.on("reset")
 def reset():
@@ -105,6 +108,7 @@ def pick(data):
 
     order = orders[state["round"]-1]
 
+    # ★ 修正：>= を消す
     if state["turn"] >= len(order):
         return
 
@@ -124,7 +128,7 @@ def pick(data):
     state["time"] = 30
     state["last"] = time.time()
 
-    # ラウンド終了
+    # ★ パックが空で判定（これが重要）
     if len(state["pack"]) == 0:
         if state["round"] < TOTAL_ROUNDS:
             state["round"] += 1
@@ -151,6 +155,7 @@ def timer():
         else:
             state["time"] = remain
 
+        # ★ 必ず毎秒送る
         socketio.emit("state", state)
 
 socketio.start_background_task(timer)
