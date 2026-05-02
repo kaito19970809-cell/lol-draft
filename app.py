@@ -143,3 +143,7 @@ def timer_loop():
             socketio.emit("state", state)
 
 socketio.start_background_task(timer_loop)
+
+# ---------- 起動 ----------
+if __name__ == "__main__":
+    socketio.run(app, host="0.0.0.0", port=10000)
