@@ -11,12 +11,11 @@ app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # -------------------------
-# チャンピオン読み込み（安全版）
+# チャンピオン読み込み
 # -------------------------
 with open("champions.json", encoding="utf-8") as f:
     champions = json.load(f)
 
-# キー統一（ここが重要）
 for c in champions:
     if "名前" in c:
         c["name"] = c["名前"]
@@ -40,7 +39,6 @@ state = {
     "time": 30
 }
 
-# ピック順
 orders = [
     ["blue","red","red","blue","blue","red","red","blue","blue","red"],
     ["red","blue","blue","red","red","blue","blue","red","red","blue"],
@@ -59,7 +57,7 @@ def index(role):
     return render_template("index.html", role=role)
 
 # -------------------------
-# パック生成
+# パック
 # -------------------------
 def new_pack():
     return random.sample(champions, 10)
@@ -94,7 +92,7 @@ def auto_pick():
     next_turn()
 
 # -------------------------
-# 次のターン
+# 次ターン
 # -------------------------
 def next_turn():
     state["turn"] += 1
@@ -109,7 +107,6 @@ def next_turn():
             socketio.emit("state", state)
             return
 
-    # 新パック生成（ここ重要）
     state["pack"] = new_pack()
 
 # -------------------------
@@ -124,7 +121,6 @@ def ready(data):
     role = data["role"]
     state["ready"][role] = True
 
-    # 両方準備でスタート
     if state["ready"]["blue"] and state["ready"]["red"]:
         state["started"] = True
         state["round"] = 1
@@ -157,7 +153,6 @@ def pick(data):
     state["pack"].remove(champ)
 
     next_turn()
-
     socketio.emit("state", state)
 
 @socketio.on("reset")
