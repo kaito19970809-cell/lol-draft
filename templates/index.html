@@ -1,86 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>LoLドラフト</title>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
 
+<style>
+body{
+ background:#0a1428;
+ color:white;
+ text-align:center;
+ font-family:sans-serif;
+}
+
+.pack{
+ display:flex;
+ justify-content:center;
+ gap:10px;
+ margin:20px;
+}
+
+.card{
+ width:80px;
+ height:100px;
+ position:relative;
+ cursor:pointer;
+}
+
+.card img{
+ width:100%;
+ height:100%;
+ border-radius:8px;
+}
+
+.lock{
+ position:absolute;
+ top:0;
+ left:0;
+ width:100%;
+ height:100%;
+ background:rgba(0,0,0,0.6);
+}
+
+.pick img{
+ width:50px;
+ margin:2px;
+}
+
+button{
+ margin:5px;
+ padding:8px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>LoLドラフト</h1>
+
+<h2 id="turn">待機中</h2>
+<div>ラウンド: <span id="round">1</span></div>
+<div>残り時間: <span id="time">30</span></div>
+
+<button onclick="ready()">準備OK</button>
+<button onclick="reset()">リセット</button>
+
+<div class="pack" id="pack"></div>
+
+<h3>ブルー</h3>
+<div id="blue" class="pick"></div>
+
+<h3>レッド</h3>
+<div id="red" class="pick"></div>
+
 <script>
-window.onload = () => {
+const socket = io();
+const role = "{{ role }}";
+let state = {};
 
- const socket = io();
- const role = "{{ role }}";
- let state = {};
+function imgUrl(champ){
+ return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${champ.image}.png`;
+}
 
- function imgUrl(champ){
-  return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${champ.image}.png`;
+function ready(){
+ socket.emit("ready", {role: role});
+}
+
+function reset(){
+ socket.emit("reset");
+}
+
+socket.on("state", s=>{
+ state = s;
+ render();
+});
+
+function render(){
+
+ if(!state.started){
+  document.getElementById("turn").innerText = "待機中";
+  return;
  }
 
- function ready(){
-  socket.emit("ready", {role: role});
- }
+ const orders = [
+  ["blue","red","red","blue","blue","red","red","blue","blue","red"],
+  ["red","blue","blue","red","red","blue","blue","red","red","blue"],
+  ["blue","red","red","blue","blue","red","red","blue","blue","red"]
+ ];
 
- function reset(){
-  socket.emit("reset");
- }
+ const current = orders[state.round-1][state.turn];
 
- socket.on("state", s=>{
-  state = s;
-  render();
- });
+ document.getElementById("turn").innerText =
+  current==="blue" ? "ブルーのターン" : "レッドのターン";
 
- function render(){
-  if(!state.started){
-   document.getElementById("turn").innerText = "待機中";
-   return;
+ document.getElementById("round").innerText = state.round;
+ document.getElementById("time").innerText = state.time;
+
+ const pack = document.getElementById("pack");
+ pack.innerHTML = "";
+
+ state.pack.forEach(champ=>{
+  const div = document.createElement("div");
+  div.className = "card";
+
+  const clickable = role === current;
+
+  div.innerHTML = `
+   <img src="${imgUrl(champ)}"
+    onerror="this.src='https://via.placeholder.com/80x100'">
+   ${!clickable ? '<div class="lock"></div>' : ''}
+  `;
+
+  if(clickable){
+   div.onclick = ()=>pick(champ.name);
   }
 
-  const orders = [
-   ["blue","red","red","blue","blue","red","red","blue","blue","red"],
-   ["red","blue","blue","red","red","blue","blue","red","red","blue"],
-   ["blue","red","red","blue","blue","red","red","blue","blue","red"]
-  ];
+  pack.appendChild(div);
+ });
 
-  const current = orders[state.round-1][state.turn];
+ ["blue","red"].forEach(team=>{
+  const el = document.getElementById(team);
+  el.innerHTML = "";
 
-  document.getElementById("turn").innerText =
-   current==="blue" ? "ブルーのターン" : "レッドのターン";
-
-  document.getElementById("round").innerText = state.round;
-  document.getElementById("time").innerText = state.time;
-
-  const pack = document.getElementById("pack");
-  pack.innerHTML = "";
-
-  state.pack.forEach(champ=>{
-   const div = document.createElement("div");
-   div.className = "card";
-
-   const clickable = role === current;
-
-   div.innerHTML = `
-    <img src="${imgUrl(champ)}"
-     onerror="this.src='https://via.placeholder.com/80x100'">
-    ${!clickable ? '<div class="lock"></div>' : ''}
-   `;
-
-   if(clickable){
-    div.onclick = ()=>pick(champ.name);
-   }
-
-   pack.appendChild(div);
+  state.picks[team].forEach(c=>{
+   el.innerHTML += `<img src="${imgUrl(c)}">`;
   });
+ });
+}
 
-  ["blue","red"].forEach(team=>{
-   const el = document.getElementById(team);
-   el.innerHTML = "";
-
-   state.picks[team].forEach(c=>{
-    el.innerHTML += `<img src="${imgUrl(c)}">`;
-   });
-  });
- }
-
- function pick(name){
-  socket.emit("pick", {role: role, champ:name});
- }
-
- window.ready = ready;
- window.reset = reset;
-};
+function pick(name){
+ socket.emit("pick", {role: role, champ:name});
+}
 </script>
+
+</body>
+</html>
