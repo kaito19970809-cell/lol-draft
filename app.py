@@ -98,6 +98,10 @@ def next_turn():
     state["turn"] += 1
     state["time"] = 30
 
+    # パックが空なら新しく生成
+    if len(state["pack"]) == 0:
+        state["pack"] = new_pack()
+
     if state["turn"] >= len(orders[state["round"]-1]):
         state["round"] += 1
         state["turn"] = 0
@@ -107,7 +111,7 @@ def next_turn():
             socketio.emit("state", state)
             return
 
-    state["pack"] = new_pack()
+    state["pack"].remove(champ)
 
 # -------------------------
 # Socket
