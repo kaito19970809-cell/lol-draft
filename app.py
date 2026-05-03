@@ -5,8 +5,6 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 import json, random
 
-print("=== APP START ===")
-
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -39,14 +37,15 @@ state = {
     "time": 30
 }
 
+# 完全交互
 orders = [
-    ["blue","red","red","blue","blue","red","red","blue","blue","red"],
-    ["red","blue","blue","red","red","blue","blue","red","red","blue"],
-    ["blue","red","red","blue","blue","red","red","blue","blue","red"]
+    ["blue","red"] * 5,
+    ["red","blue"] * 5,
+    ["blue","red"] * 5
 ]
 
 # -------------------------
-# ルーティング
+# ルート
 # -------------------------
 @app.route("/")
 def root():
@@ -55,12 +54,6 @@ def root():
 @app.route("/<role>")
 def index(role):
     return render_template("index.html", role=role)
-
-# -------------------------
-# パック
-# -------------------------
-def new_pack():
-    return random.sample(champions, 10)
 
 # -------------------------
 # タイマー
@@ -89,18 +82,16 @@ def auto_pick():
     current = orders[state["round"]-1][state["turn"]]
 
     state["picks"][current].append(champ)
+    state["pack"].remove(champ)
+
     next_turn()
 
 # -------------------------
-# 次ターン
+# ターン進行
 # -------------------------
 def next_turn():
     state["turn"] += 1
     state["time"] = 30
-
-    # パックが空なら新しく生成
-    if len(state["pack"]) == 0:
-        state["pack"] = new_pack()
 
     if state["turn"] >= len(orders[state["round"]-1]):
         state["round"] += 1
@@ -110,8 +101,6 @@ def next_turn():
             state["started"] = False
             socketio.emit("state", state)
             return
-
-    state["pack"].remove(champ)
 
 # -------------------------
 # Socket
@@ -130,7 +119,10 @@ def ready(data):
         state["round"] = 1
         state["turn"] = 0
         state["picks"] = {"blue": [], "red": []}
-        state["pack"] = new_pack()
+
+        # 🔥 30体一括生成（重複なし）
+        state["pack"] = random.sample(champions, 30)
+
         state["time"] = 30
 
         start_timer()
