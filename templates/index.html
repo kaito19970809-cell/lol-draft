@@ -1,79 +1,86 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
+
 <script>
-const socket = io();
-const role = "{{ role }}";
-let state = {};
+window.onload = () => {
 
-function imgUrl(champ){
- return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${champ.image}.png`;
-}
+ const socket = io();
+ const role = "{{ role }}";
+ let state = {};
 
-function ready(){
- socket.emit("ready", {role: role}); // ←ここ重要（startじゃない）
-}
-
-function reset(){
- socket.emit("reset");
-}
-
-socket.on("state", s=>{
- state = s;
- render();
-});
-
-function render(){
-
- if(!state.started){
-  document.getElementById("turn").innerText = "待機中";
-  return;
+ function imgUrl(champ){
+  return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${champ.image}.png`;
  }
 
- const orders = [
-  ["blue","red","red","blue","blue","red","red","blue","blue","red"],
-  ["red","blue","blue","red","red","blue","blue","red","red","blue"],
-  ["blue","red","red","blue","blue","red","red","blue","blue","red"]
- ];
+ function ready(){
+  socket.emit("ready", {role: role});
+ }
 
- const current = orders[state.round-1][state.turn];
+ function reset(){
+  socket.emit("reset");
+ }
 
- document.getElementById("turn").innerText =
-  current==="blue" ? "ブルーのターン" : "レッドのターン";
+ socket.on("state", s=>{
+  state = s;
+  render();
+ });
 
- document.getElementById("round").innerText = state.round;
- document.getElementById("time").innerText = state.time;
-
- const pack = document.getElementById("pack");
- pack.innerHTML = "";
-
- state.pack.forEach(champ=>{
-  const div = document.createElement("div");
-  div.className = "card";
-
-  const clickable = role === current;
-
-  div.innerHTML = `
-   <img src="${imgUrl(champ)}"
-    onerror="this.src='https://via.placeholder.com/80x100'">
-   ${!clickable ? '<div class="lock"></div>' : ''}
-  `;
-
-  if(clickable){
-   div.onclick = ()=>pick(champ.name); // ← nameで統一
+ function render(){
+  if(!state.started){
+   document.getElementById("turn").innerText = "待機中";
+   return;
   }
 
-  pack.appendChild(div);
- });
+  const orders = [
+   ["blue","red","red","blue","blue","red","red","blue","blue","red"],
+   ["red","blue","blue","red","red","blue","blue","red","red","blue"],
+   ["blue","red","red","blue","blue","red","red","blue","blue","red"]
+  ];
 
- ["blue","red"].forEach(team=>{
-  const el = document.getElementById(team);
-  el.innerHTML = "";
+  const current = orders[state.round-1][state.turn];
 
-  state.picks[team].forEach(c=>{
-   el.innerHTML += `<img src="${imgUrl(c)}">`;
+  document.getElementById("turn").innerText =
+   current==="blue" ? "ブルーのターン" : "レッドのターン";
+
+  document.getElementById("round").innerText = state.round;
+  document.getElementById("time").innerText = state.time;
+
+  const pack = document.getElementById("pack");
+  pack.innerHTML = "";
+
+  state.pack.forEach(champ=>{
+   const div = document.createElement("div");
+   div.className = "card";
+
+   const clickable = role === current;
+
+   div.innerHTML = `
+    <img src="${imgUrl(champ)}"
+     onerror="this.src='https://via.placeholder.com/80x100'">
+    ${!clickable ? '<div class="lock"></div>' : ''}
+   `;
+
+   if(clickable){
+    div.onclick = ()=>pick(champ.name);
+   }
+
+   pack.appendChild(div);
   });
- });
-}
 
-function pick(name){
- socket.emit("pick", {role: role, champ:name});
-}
+  ["blue","red"].forEach(team=>{
+   const el = document.getElementById(team);
+   el.innerHTML = "";
+
+   state.picks[team].forEach(c=>{
+    el.innerHTML += `<img src="${imgUrl(c)}">`;
+   });
+  });
+ }
+
+ function pick(name){
+  socket.emit("pick", {role: role, champ:name});
+ }
+
+ window.ready = ready;
+ window.reset = reset;
+};
 </script>
