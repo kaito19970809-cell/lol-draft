@@ -15,92 +15,40 @@ with open("champions.json", encoding="utf-8") as f:
     champions = json.load(f)
 
 for c in champions:
-    if "名前" in c:
-        c["name"] = c["名前"]
-    elif "name" in c:
-        c["名前"] = c["name"]
-    else:
-        raise Exception("champions.jsonに名前キーがない")
-
-    c["image"] = c["name"].replace(" ", "").replace("'", "")
+    c["image"] = c["name"]
 
 # -------------------------
 # 状態
 # -------------------------
 state = {
     "started": False,
-    "ready": {"blue": False, "red": False},
     "turn": 0,
-    "round": 1,
-    "pack": [],
-    "picks": {"blue": [], "red": []},
-    "time": 30
+    "pool": [],
+    "picks": {"blue": [], "red": []}
 }
-
-# 完全交互
-orders = [
-    ["blue","red"] * 5,
-    ["red","blue"] * 5,
-    ["blue","red"] * 5
-]
 
 # -------------------------
 # ルート
 # -------------------------
-@app.route("/")
-def root():
-    return "Server Running"
-
 @app.route("/<role>")
 def index(role):
     return render_template("index.html", role=role)
 
-# -------------------------
-# タイマー
-# -------------------------
-def start_timer():
-    def run():
-        while state["started"]:
-            socketio.sleep(1)
-            state["time"] -= 1
-
-            if state["time"] <= 0:
-                auto_pick()
-
-            socketio.emit("state", state)
-
-    socketio.start_background_task(run)
+@app.route("/")
+def root():
+    return "OK"
 
 # -------------------------
-# 自動ピック
+# プール生成（30枚・被りなし）
 # -------------------------
-def auto_pick():
-    if not state["pack"]:
-        return
-
-    champ = state["pack"][0]
-    current = orders[state["round"]-1][state["turn"]]
-
-    state["picks"][current].append(champ)
-    state["pack"].remove(champ)
-
-    next_turn()
+def create_pool():
+    return random.sample(champions, min(30, len(champions)))
 
 # -------------------------
-# ターン進行
+# ターン取得（青赤交互）
 # -------------------------
-def next_turn():
-    state["turn"] += 1
-    state["time"] = 30
-
-    if state["turn"] >= len(orders[state["round"]-1]):
-        state["round"] += 1
-        state["turn"] = 0
-
-        if state["round"] > 3:
-            state["started"] = False
-            socketio.emit("state", state)
-            return
+def current_turn():
+    return "blue" if state["turn"] % 2 == 0 else "red"
 
 # -------------------------
 # Socket
@@ -109,24 +57,12 @@ def next_turn():
 def connect():
     emit("state", state)
 
-@socketio.on("ready")
-def ready(data):
-    role = data["role"]
-    state["ready"][role] = True
-
-    if state["ready"]["blue"] and state["ready"]["red"]:
-        state["started"] = True
-        state["round"] = 1
-        state["turn"] = 0
-        state["picks"] = {"blue": [], "red": []}
-
-        # 🔥 30体一括生成（重複なし）
-        state["pack"] = random.sample(champions, 30)
-
-        state["time"] = 30
-
-        start_timer()
-
+@socketio.on("start")
+def start():
+    state["started"] = True
+    state["turn"] = 0
+    state["picks"] = {"blue": [], "red": []}
+    state["pool"] = create_pool()
     socketio.emit("state", state)
 
 @socketio.on("pick")
@@ -137,30 +73,25 @@ def pick(data):
     if not state["started"]:
         return
 
-    current = orders[state["round"]-1][state["turn"]]
-    if role != current:
+    if role != current_turn():
         return
 
-    champ = next((c for c in state["pack"] if c["name"] == name), None)
+    champ = next((c for c in state["pool"] if c["name"] == name), None)
     if not champ:
         return
 
     state["picks"][role].append(champ)
-    state["pack"].remove(champ)
+    state["pool"].remove(champ)
+    state["turn"] += 1
 
-    next_turn()
     socketio.emit("state", state)
 
 @socketio.on("reset")
 def reset():
     state["started"] = False
-    state["ready"] = {"blue": False, "red": False}
     state["turn"] = 0
-    state["round"] = 1
-    state["pack"] = []
+    state["pool"] = []
     state["picks"] = {"blue": [], "red": []}
-    state["time"] = 30
-
     socketio.emit("state", state)
 
 # -------------------------
