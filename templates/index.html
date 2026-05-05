@@ -3,22 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
 <style>
 body{background:#0a1428;color:white;text-align:center;}
-.card{display:inline-block;margin:5px;cursor:pointer;}
+.pack{display:flex;justify-content:center;gap:10px;margin:20px;}
+.card{cursor:pointer}
 img{width:80px}
 </style>
 </head>
 
 <body>
 
-<h1>ドラフト</h1>
+<h1>6パックドラフト</h1>
+
 <h2 id="turn">待機中</h2>
 
-<button onclick="start()">開始</button>
+<button onclick="start()">スタート</button>
 <button onclick="reset()">リセット</button>
 
-<div id="pool"></div>
+<div class="pack" id="pack"></div>
 
 <h3>BLUE</h3>
 <div id="blue"></div>
@@ -31,8 +34,8 @@ const socket = io();
 const role = "{{ role }}";
 let state = {};
 
-function img(champ){
- return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${champ.image}.png`;
+function img(c){
+ return `https://ddragon.leagueoflegends.com/cdn/13.24.1/img/champion/${c.image}.png`;
 }
 
 socket.on("state", s=>{
@@ -49,7 +52,8 @@ function reset(){
 }
 
 function render(){
- if(!state.started){
+
+ if(state.phase !== "DRAFT"){
   document.getElementById("turn").innerText = "待機中";
   return;
  }
@@ -57,10 +61,12 @@ function render(){
  const turn = state.turn % 2 === 0 ? "blue" : "red";
  document.getElementById("turn").innerText = turn + "のターン";
 
- const pool = document.getElementById("pool");
- pool.innerHTML = "";
+ const packArea = document.getElementById("pack");
+ packArea.innerHTML = "";
 
- state.pool.forEach(c=>{
+ const pack = state.packs[role]?.[0] || [];
+
+ pack.forEach(c=>{
   const div = document.createElement("div");
   div.className = "card";
 
@@ -70,12 +76,13 @@ function render(){
    div.onclick = ()=>socket.emit("pick",{role:role, champ:c.name});
   }
 
-  pool.appendChild(div);
+  packArea.appendChild(div);
  });
 
  ["blue","red"].forEach(t=>{
   const el = document.getElementById(t);
   el.innerHTML = "";
+
   state.picks[t].forEach(c=>{
    el.innerHTML += `<img src="${img(c)}">`;
   });
