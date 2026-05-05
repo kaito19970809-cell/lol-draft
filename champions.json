@@ -1,7 +1,12 @@
 [
   {"name":"Aatrox","roles":["TOP"],"tier":"A"},
+  {"name":"Darius","roles":["TOP"],"tier":"B"},
+  {"name":"LeeSin","roles":["JG"],"tier":"S"},
+  {"name":"Vi","roles":["JG"],"tier":"B"},
   {"name":"Ahri","roles":["MID"],"tier":"A"},
-  {"name":"Ashe","roles":["ADC"],"tier":"A"},
-  {"name":"LeeSin","roles":["JG"],"tier":"A"},
-  {"name":"Thresh","roles":["SUP"],"tier":"A"}
+  {"name":"Zed","roles":["MID"],"tier":"S"},
+  {"name":"Jinx","roles":["ADC"],"tier":"A"},
+  {"name":"Caitlyn","roles":["ADC"],"tier":"B"},
+  {"name":"Thresh","roles":["SUP"],"tier":"S"},
+  {"name":"Leona","roles":["SUP"],"tier":"A"}
 ]
