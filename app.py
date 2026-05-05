@@ -1,20 +1,27 @@
-import random
-import json
+import eventlet
+eventlet.monkey_patch()
 
-print("=== PACK GENERATOR START ===")
+from flask import Flask, jsonify
+import random, json
+
+print("=== APP START ===")
 
 # -----------------
-# 読み込み
+# Flask
+# -----------------
+app = Flask(__name__)
+
+# -----------------
+# チャンピオン読み込み
 # -----------------
 with open("champions.json", encoding="utf-8") as f:
     champions = json.load(f)
 
-# 画像キー生成
 for c in champions:
     c["image"] = c["name"].replace(" ", "").replace("'", "")
 
 # -----------------
-# ティア重み
+# 設定
 # -----------------
 weights = {
     "S": 5,
@@ -27,17 +34,16 @@ weights = {
 ROLES = ["TOP","JG","MID","ADC","SUP"]
 
 # -----------------
-# 重み抽選
+# 抽選
 # -----------------
 def weighted_choice(candidates):
     pool = []
     for c in candidates:
-        w = weights.get(c["tier"], 20)
-        pool += [c] * w
+        pool += [c] * weights.get(c["tier"], 20)
     return random.choice(pool)
 
 # -----------------
-# 1パック生成（5体）
+# パック生成
 # -----------------
 def generate_pack(pool):
     pack = []
@@ -46,7 +52,7 @@ def generate_pack(pool):
         candidates = [c for c in pool if role in c["roles"]]
 
         if not candidates:
-            raise Exception(f"{role}が足りない")
+            raise Exception(f"{role}不足")
 
         chosen = weighted_choice(candidates)
         pack.append(chosen)
@@ -54,28 +60,29 @@ def generate_pack(pool):
 
     return pack
 
-# -----------------
-# 6パック生成（30体）
-# -----------------
 def generate_all_packs():
     pool = champions.copy()
     random.shuffle(pool)
 
     packs = []
-
-    for i in range(6):
-        pack = generate_pack(pool)
-        packs.append(pack)
+    for _ in range(6):
+        packs.append(generate_pack(pool))
 
     return packs
 
 # -----------------
-# テスト実行
+# ルート
+# -----------------
+@app.route("/")
+def home():
+    return "LoL Draft Server Running"
+
+@app.route("/packs")
+def packs():
+    return jsonify(generate_all_packs())
+
+# -----------------
+# 起動
 # -----------------
 if __name__ == "__main__":
-    packs = generate_all_packs()
-
-    for i, p in enumerate(packs):
-        print(f"\n=== PACK {i+1} ===")
-        for c in p:
-            print(f"{c['name']} ({c['roles']}) [{c['tier']}]")
+    app.run(host="0.0.0.0", port=10000)
