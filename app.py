@@ -1,128 +1,81 @@
-import eventlet
-eventlet.monkey_patch()
+import random
+import json
 
-from flask import Flask, render_template
-from flask_socketio import SocketIO, emit
-import json, random
+print("=== PACK GENERATOR START ===")
 
-app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
-
-# -------------------------
-# チャンピオン読み込み
-# -------------------------
+# -----------------
+# 読み込み
+# -----------------
 with open("champions.json", encoding="utf-8") as f:
     champions = json.load(f)
 
+# 画像キー生成
 for c in champions:
-    c["image"] = c["name"]
+    c["image"] = c["name"].replace(" ", "").replace("'", "")
 
-# -------------------------
-# 状態
-# -------------------------
-state = {
-    "phase": "WAITING",
-    "turn": 0,
-    "packs": {"blue": [], "red": []},
-    "picks": {"blue": [], "red": []}
+# -----------------
+# ティア重み
+# -----------------
+weights = {
+    "S": 5,
+    "A": 10,
+    "B": 20,
+    "C": 30,
+    "D": 35
 }
 
-# -------------------------
-# パック生成
-# -------------------------
-def create_packs():
-    pool = random.sample(champions, 30)
-    packs = [pool[i:i+5] for i in range(0, 30, 5)]
+ROLES = ["TOP","JG","MID","ADC","SUP"]
 
-    return {
-        "blue": packs[:3],
-        "red": packs[3:]
-    }
+# -----------------
+# 重み抽選
+# -----------------
+def weighted_choice(candidates):
+    pool = []
+    for c in candidates:
+        w = weights.get(c["tier"], 20)
+        pool += [c] * w
+    return random.choice(pool)
 
-# -------------------------
-# 現在プレイヤー
-# -------------------------
-def current_player():
-    return "blue" if state["turn"] % 2 == 0 else "red"
+# -----------------
+# 1パック生成（5体）
+# -----------------
+def generate_pack(pool):
+    pack = []
 
-# -------------------------
-# ルート
-# -------------------------
-@app.route("/<role>")
-def index(role):
-    return render_template("index.html", role=role)
+    for role in ROLES:
+        candidates = [c for c in pool if role in c["roles"]]
 
-@app.route("/")
-def root():
-    return "OK"
+        if not candidates:
+            raise Exception(f"{role}が足りない")
 
-# -------------------------
-# Socket
-# -------------------------
-@socketio.on("connect")
-def connect():
-    emit("state", state)
+        chosen = weighted_choice(candidates)
+        pack.append(chosen)
+        pool.remove(chosen)
 
-@socketio.on("start")
-def start():
-    state["phase"] = "DRAFT"
-    state["turn"] = 0
-    state["packs"] = create_packs()
-    state["picks"] = {"blue": [], "red": []}
+    return pack
 
-    socketio.emit("state", state)
+# -----------------
+# 6パック生成（30体）
+# -----------------
+def generate_all_packs():
+    pool = champions.copy()
+    random.shuffle(pool)
 
-@socketio.on("pick")
-def pick(data):
-    role = data["role"]
-    name = data["champ"]
+    packs = []
 
-    if state["phase"] != "DRAFT":
-        return
+    for i in range(6):
+        pack = generate_pack(pool)
+        packs.append(pack)
 
-    if role != current_player():
-        return
+    return packs
 
-    if not state["packs"][role]:
-        return
-
-    pack = state["packs"][role][0]
-
-    champ = next((c for c in pack if c["name"] == name), None)
-    if not champ:
-        return
-
-    # ピック
-    state["picks"][role].append(champ)
-    pack.remove(champ)
-
-    # パス処理
-    other = "red" if role == "blue" else "blue"
-
-    if len(pack) > 0:
-        state["packs"][other].append(pack)
-
-    state["packs"][role].pop(0)
-
-    state["turn"] += 1
-
-    # 終了
-    if state["turn"] >= 30:
-        state["phase"] = "END"
-
-    socketio.emit("state", state)
-
-@socketio.on("reset")
-def reset():
-    state["phase"] = "WAITING"
-    state["turn"] = 0
-    state["packs"] = {"blue": [], "red": []}
-    state["picks"] = {"blue": [], "red": []}
-
-    socketio.emit("state", state)
-
-# -------------------------
-# 起動
-# -------------------------
+# -----------------
+# テスト実行
+# -----------------
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=10000)
+    packs = generate_all_packs()
+
+    for i, p in enumerate(packs):
+        print(f"\n=== PACK {i+1} ===")
+        for c in p:
+            print(f"{c['name']} ({c['roles']}) [{c['tier']}]")
