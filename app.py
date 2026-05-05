@@ -21,11 +21,29 @@ for c in champions:
 # 状態
 # -------------------------
 state = {
-    "started": False,
+    "phase": "WAITING",
     "turn": 0,
-    "pool": [],
+    "packs": {"blue": [], "red": []},
     "picks": {"blue": [], "red": []}
 }
+
+# -------------------------
+# パック生成
+# -------------------------
+def create_packs():
+    pool = random.sample(champions, 30)
+    packs = [pool[i:i+5] for i in range(0, 30, 5)]
+
+    return {
+        "blue": packs[:3],
+        "red": packs[3:]
+    }
+
+# -------------------------
+# 現在プレイヤー
+# -------------------------
+def current_player():
+    return "blue" if state["turn"] % 2 == 0 else "red"
 
 # -------------------------
 # ルート
@@ -39,18 +57,6 @@ def root():
     return "OK"
 
 # -------------------------
-# プール生成（30枚・被りなし）
-# -------------------------
-def create_pool():
-    return random.sample(champions, min(30, len(champions)))
-
-# -------------------------
-# ターン取得（青赤交互）
-# -------------------------
-def current_turn():
-    return "blue" if state["turn"] % 2 == 0 else "red"
-
-# -------------------------
 # Socket
 # -------------------------
 @socketio.on("connect")
@@ -59,10 +65,11 @@ def connect():
 
 @socketio.on("start")
 def start():
-    state["started"] = True
+    state["phase"] = "DRAFT"
     state["turn"] = 0
+    state["packs"] = create_packs()
     state["picks"] = {"blue": [], "red": []}
-    state["pool"] = create_pool()
+
     socketio.emit("state", state)
 
 @socketio.on("pick")
@@ -70,28 +77,48 @@ def pick(data):
     role = data["role"]
     name = data["champ"]
 
-    if not state["started"]:
+    if state["phase"] != "DRAFT":
         return
 
-    if role != current_turn():
+    if role != current_player():
         return
 
-    champ = next((c for c in state["pool"] if c["name"] == name), None)
+    if not state["packs"][role]:
+        return
+
+    pack = state["packs"][role][0]
+
+    champ = next((c for c in pack if c["name"] == name), None)
     if not champ:
         return
 
+    # ピック
     state["picks"][role].append(champ)
-    state["pool"].remove(champ)
+    pack.remove(champ)
+
+    # パス処理
+    other = "red" if role == "blue" else "blue"
+
+    if len(pack) > 0:
+        state["packs"][other].append(pack)
+
+    state["packs"][role].pop(0)
+
     state["turn"] += 1
+
+    # 終了
+    if state["turn"] >= 30:
+        state["phase"] = "END"
 
     socketio.emit("state", state)
 
 @socketio.on("reset")
 def reset():
-    state["started"] = False
+    state["phase"] = "WAITING"
     state["turn"] = 0
-    state["pool"] = []
+    state["packs"] = {"blue": [], "red": []}
     state["picks"] = {"blue": [], "red": []}
+
     socketio.emit("state", state)
 
 # -------------------------
